@@ -1,0 +1,8 @@
+/bin/
+*.class
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+.DS_Store
+/lib/*.jar
