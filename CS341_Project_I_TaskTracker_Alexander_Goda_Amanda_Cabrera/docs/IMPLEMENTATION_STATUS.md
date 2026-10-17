@@ -2,24 +2,36 @@
 
 ## Completed milestones
 
-- Week 1 Requirements Analysis
-- Week 1 SQLite/JDBC rapid prototype
-- Prototype visual verification: connection, schema creation, insert, read-back
-- Prototype JUnit verification: 2/2 passed, 0 errors, 0 failures
-- Week 2 MVC architecture
-- Week 2 database schema
-- Week 2 UML class diagrams
-- Week 2 unit and acceptance-test outlines
+- Week 1 Requirements Analysis and SQLite/JDBC rapid prototype
+- Recorded prototype verification: 2/2 JUnit tests, 0 errors, 0 failures
+- Week 2 MVC architecture, production schema, UML, and test outlines
+- Production model and persistence: User, Task, Priority, DatabaseManager, UserDAO, TaskDAO
+- Controllers: AuthController and TaskController
+- Swing views: LoginView, RegisterView, TaskDashboardView, TaskEditorView
+- Registration/login/logout; task creation/editing/deletion; assignment/unassignment
+- Creator-only editing/deletion/assignment; creator-or-assignee completion changes
+- Relevant-task visibility; optional due dates; LOW/MEDIUM/HIGH priority with MEDIUM default
+- SQLite persistence and automatic schema creation
 
-## Current implementation baseline
+## Recorded verification
 
-The shared final-project repository now implements the production model and database layer before the GUI:
+The October 16, 2026 testing report records 25/25 automated tests passing, 0 errors, 0 failures, and nine passing manual acceptance checks, including full application restart persistence. Eclipse Problems showed 0 errors and 0 warnings in that recorded session. These describe the original session; the post-fix JUnit rerun and manual check M10 are recorded below.
 
-- `tasktracker.model.User`
-- `tasktracker.model.Task`
-- `tasktracker.model.Priority`
-- `tasktracker.data.DatabaseManager`
-- `tasktracker.data.UserDAO`
-- `tasktracker.data.TaskDAO`
+The five test classes contain 2 database, 5 user DAO, 6 task DAO, 6 authentication, and 6 task-controller tests. Week 2 test outlines remain planning records. Default-priority and blank-title planned unit tests were not added to this suite; blank-title rejection has manual evidence in M07.
 
-The next implementation step is the controller layer, followed by Swing views.
+## Final documentation reconciliation
+
+Requirements refinements now describe registration confirmation, optional/self assignment, and completion reopening. MVC/UML diagrams match implemented symbols and return types. The schema matches both embedded initialization SQL and sql/schema.sql. The Week 1 and Week 2 history remains in its existing folders.
+
+## Verified logout correction
+
+TaskDashboardView tracks each task editor it opens, removes closed editors from its list, and disposes all remaining editors when the dashboard is disposed. Logout disposes the dashboard and its editors before clearing the authenticated session and invoking the login callback.
+
+The post-fix Eclipse JUnit rerun on October 16, 2026 completed 25/25 tests with 0 errors and 0 failures in 0.413 seconds, as shown in the 11:33 PM screenshot. The existing suite still contains 25 methods; no new automated GUI test was added.
+
+Manual regression check M10 passed: the user confirmed that both New Task and Edit Task windows closed automatically when Logout was clicked. The subsequent screenshot shows Amanda's dashboard without the old editors. This is manual GUI evidence, separate from the JUnit rerun.
+
+## Remaining final-delivery work
+
+- Perform the final presentation/demo and submission preparation.
+- Rerun relevant checks after any implementation change and record only observed results.

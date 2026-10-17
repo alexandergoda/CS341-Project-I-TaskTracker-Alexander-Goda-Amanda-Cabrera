@@ -3,6 +3,8 @@ package tasktracker.view;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +49,7 @@ public class TaskDashboardView extends JFrame {
     private JButton logoutButton;
 
     private List<Task> visibleTasks;
+    private final List<TaskEditorView> openEditors = new ArrayList<TaskEditorView>();
 
     public TaskDashboardView(AuthController authController,
             TaskController taskController, Runnable logoutAction) {
@@ -250,8 +253,7 @@ public class TaskDashboardView extends JFrame {
                     }
                 });
 
-        editor.setLocationRelativeTo(this);
-        editor.setVisible(true);
+        showTaskEditor(editor);
     }
 
     /**
@@ -284,8 +286,36 @@ public class TaskDashboardView extends JFrame {
                     }
                 });
 
+        showTaskEditor(editor);
+    }
+
+    /**
+     * Tracks editors belonging to this dashboard so they cannot remain open
+     * after the dashboard's authenticated session ends.
+     */
+    private void showTaskEditor(final TaskEditorView editor) {
+        openEditors.add(editor);
+        editor.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent event) {
+                openEditors.remove(editor);
+            }
+        });
         editor.setLocationRelativeTo(this);
         editor.setVisible(true);
+    }
+
+    /**
+     * Closes this dashboard and every task editor opened from it. A snapshot
+     * allows window-closed callbacks to remove editors safely during disposal.
+     */
+    @Override
+    public void dispose() {
+        for (TaskEditorView editor : new ArrayList<TaskEditorView>(openEditors)) {
+            editor.dispose();
+        }
+        openEditors.clear();
+        super.dispose();
     }
 
     /**
@@ -360,8 +390,9 @@ public class TaskDashboardView extends JFrame {
      * Logs out and returns control to the supplied login action.
      */
     private void logout() {
-        authController.logout();
+        // Close task editors before clearing the session or opening another login.
         dispose();
+        authController.logout();
 
         if (logoutAction != null) {
             logoutAction.run();
