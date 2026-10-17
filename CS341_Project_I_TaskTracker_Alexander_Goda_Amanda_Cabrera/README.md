@@ -233,11 +233,10 @@ docs/
 ├── Requirements/
 ├── Design/
 ├── CS341_Project_I_Testing_Report_Alexander_Goda_Amanda_Cabrera.docx
-├── CS341_TaskTracker_Presentation.pptx
-└── VALIDATION_CHECKLIST.md
+└── CS341_TaskTracker_Presentation.pptx
 ```
 
-## Final Documentation Reconciliation
+## Implementation details
 
 The Requirements Analysis retains the Week 1 baseline with recorded implementation refinements. The Week 2 Design Package retains its planning and historical handoff, with diagrams reconciled to the production code and planned tests distinguished from recorded results.
 
@@ -251,7 +250,7 @@ The Requirements Analysis retains the Week 1 baseline with recorded implementati
 
 TaskDashboardView tracks open task editors and disposes them when the dashboard closes. Logout closes the dashboard and its editors before clearing the authenticated session and returning to login.
 
-The testing report records manual acceptance checks M01–M09 and the user-confirmed M10 logout regression check. Editor cleanup is covered by manual verification; the 28 automated tests exercise controllers and SQLite persistence, not Swing GUI interaction. The latest recorded automated run did not repeat all manual GUI checks.
+The testing report records manual acceptance checks M01–M09 and the manually verified M10 logout regression check. Editor cleanup is covered by manual verification; the 28 automated tests exercise controllers and SQLite persistence, not Swing GUI interaction. The latest recorded automated run did not repeat all manual GUI checks.
 
 ## Running a clean checkout
 

@@ -10,4 +10,4 @@ The Eclipse .classpath file already references that relative path so both team m
 Official artifact coordinates:
 org.xerial:sqlite-jdbc:3.53.4.0
 
-Do not commit the JAR unless the team deliberately decides to vendor the third-party dependency. The current .gitignore excludes /lib/*.jar.
+The JDBC JAR is a third-party dependency and is excluded from version control by /lib/*.jar in .gitignore.
