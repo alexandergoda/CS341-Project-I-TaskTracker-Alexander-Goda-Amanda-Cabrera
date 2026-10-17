@@ -145,7 +145,7 @@ The following components have been implemented:
 
 JUnit 5 is used for automated testing.
 
-The automated suite contains 28 test methods across five classes. The latest recorded October 16, 2026 Eclipse run completed in 0.444 seconds with:
+The automated suite contains 28 test methods across five classes. The latest recorded October 17, 2026 Eclipse run completed in 0.715 seconds with:
 
 - **28/28 runs**
 - **0 errors**
@@ -232,8 +232,7 @@ sql/
 docs/
 ├── Requirements/
 ├── Design/
-├── CS341_Project_I_Testing_Report_Alexander_Goda_Amanda_Cabrera.docx
-└── CS341_TaskTracker_Presentation.pptx
+└── CS341_Project_I_Testing_Report_Alexander_Goda_Amanda_Cabrera.docx
 ```
 
 ## Implementation details
@@ -267,4 +266,23 @@ The testing report records manual acceptance checks M01–M09 and the manually v
 - Requirements and use cases: `docs/Requirements/`
 - Design package and diagrams: `docs/Design/`
 - Testing report: `docs/CS341_Project_I_Testing_Report_Alexander_Goda_Amanda_Cabrera.docx`
-- Presentation: `docs/CS341_TaskTracker_Presentation.pptx`
+
+Presentation slides and the speaking script are maintained separately from the source repository.
+
+## Canvas submission requirements
+
+Canvas: CS-341-01 > Assignments > [WEEK 10: Project I](https://redlands.instructure.com/courses/17741/assignments/176971). The page lists a due date and availability cutoff of November 4, 2026 at 11:59 p.m.
+
+The assignment requests:
+
+- The GitHub repository URL; the repository must contain all code, including JavaDoc and JUnit tests.
+- An introduction covering purpose, context, and objectives.
+- User requirements and use-case scenarios.
+- A system requirements specification with functional and nonfunctional requirements.
+- UML diagrams submitted to Canvas.
+
+The Requirements Analysis in `docs/Requirements/` contains the introduction (Section 1), user requirements (Section 6), SRS (Section 7), and use cases (Section 9). The design package and diagram PNGs are in `docs/Design/`. Submit the required documents and UML diagrams to Canvas in addition to providing the repository URL.
+
+The original Week 7 Project I specification additionally requests SQL table design, a test report, and contributions from each member in Git. The schema is in `sql/schema.sql`, the database diagram is in `docs/Design/`, and the testing report is in `docs/`.
+
+The Week 10 page states that presentations take place that week. As checked on October 17, it displays no Start Assignment or file-upload control. The [Week 7 Project I assignment](https://redlands.instructure.com/courses/17741/assignments/175172) does display Text, Web URL, Upload, and Submit Assignment controls. Confirm with the instructor which page should receive the final materials before submitting.
