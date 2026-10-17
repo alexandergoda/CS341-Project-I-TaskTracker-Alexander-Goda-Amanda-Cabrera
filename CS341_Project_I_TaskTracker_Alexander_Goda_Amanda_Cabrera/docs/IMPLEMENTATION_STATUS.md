@@ -35,3 +35,8 @@ Manual regression check M10 passed: the user confirmed that both New Task and Ed
 
 - Perform the final presentation/demo and submission preparation.
 - Rerun relevant checks after any implementation change and record only observed results.
+
+
+## Latest final audit
+
+Final audit addendum dated October 16, 2026. This addendum supersedes current-suite counts and coverage-limit statements above while preserving historical results and Week 1/Week 2 plans. The expanded Eclipse JUnit 5 suite passed 28/28 tests with 0 errors and 0 failures in 0.444 seconds. Class counts are DatabaseManagerTest 2, UserDAOTest 5, TaskDAOTest 6, AuthControllerTest 6, and TaskControllerTest 9. Three new controller tests cover rejection of every public task operation while logged out, self-assignment without duplicate dashboard results with MEDIUM default and optional date, completion and reopening followed by unassignment, and blank-title create/edit rejection with saved data unchanged. These are automated controller/SQLite checks, not GUI passes. Editor-window cleanup remains covered by the previously recorded manual M10 only. The fresh Problems tab reported 0 items in its current configuration. Production sources compiled on JDK 11.0.30 with --release 11 and -Xlint:all without diagnostics. Eclipse launched Main and reported database initialization success, but native automation could not bind to the Java window; no new manual GUI pass is claimed. See docs/FINAL_AUDIT.md and docs/FINAL_SUBMISSION_CHECKLIST.md for delivery status and limitations.

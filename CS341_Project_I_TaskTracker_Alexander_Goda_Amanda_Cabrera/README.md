@@ -251,3 +251,21 @@ The post-fix Eclipse JUnit rerun on October 16, 2026 completed 25/25 tests with 
 Manual regression check M10 passed: the user confirmed that both New Task and Edit Task windows closed automatically when Logout was clicked. The subsequent screenshot shows Amanda's dashboard without the old editors. This is manual GUI evidence, separate from the JUnit rerun.
 
 The original nine acceptance checks remain recorded as M01-M09; M10 is the additional logout regression check. No dedicated automated assertions were added for default MEDIUM priority, blank task titles, completion reopening, or editor/logout behavior. Blank-title rejection has manual evidence in M07.
+
+
+## Latest final audit
+
+Final audit addendum dated October 16, 2026. This addendum supersedes current-suite counts and coverage-limit statements above while preserving historical results and Week 1/Week 2 plans. The expanded Eclipse JUnit 5 suite passed 28/28 tests with 0 errors and 0 failures in 0.444 seconds. Class counts are DatabaseManagerTest 2, UserDAOTest 5, TaskDAOTest 6, AuthControllerTest 6, and TaskControllerTest 9. Three new controller tests cover rejection of every public task operation while logged out, self-assignment without duplicate dashboard results with MEDIUM default and optional date, completion and reopening followed by unassignment, and blank-title create/edit rejection with saved data unchanged. These are automated controller/SQLite checks, not GUI passes. Editor-window cleanup remains covered by the previously recorded manual M10 only. The fresh Problems tab reported 0 items in its current configuration. Production sources compiled on JDK 11.0.30 with --release 11 and -Xlint:all without diagnostics. Eclipse launched Main and reported database initialization success, but native automation could not bind to the Java window; no new manual GUI pass is claimed. See docs/FINAL_AUDIT.md and docs/FINAL_SUBMISSION_CHECKLIST.md for delivery status and limitations.
+
+
+## Running a clean checkout
+
+1. Install JDK 11 or newer and use Eclipse with Java and JUnit 5 support.
+2. Import this folder with File > Import > Existing Projects into Workspace. The Git repository contains this Eclipse project inside its named subdirectory.
+3. Obtain the Xerial driver named in `lib/README.txt` and place it at `lib/sqlite-jdbc-3.53.4.0.jar`. The JAR is intentionally ignored by Git.
+4. Refresh the project, confirm JavaSE-11 and JUnit 5 in the build path, and build. The classpath uses relative paths.
+5. Run `src/tasktracker/Main.java` as a Java Application. Use this project directory as the working directory for a consistent local `tasks.db`.
+6. Register a local account, close the registration window, then log in. The application creates its database and tables automatically.
+7. Run the entire `test/tester` package as JUnit Test. The latest inventory is 28 tests. See the final audit addendum above; older 25-test results remain historical records.
+
+Final delivery materials: `docs/FINAL_AUDIT.md`, `docs/FINAL_SUBMISSION_CHECKLIST.md`, `docs/DEMO_SCRIPT.md`, and `docs/CS341_TaskTracker_Presentation.pptx`. The presentation requires team review and rehearsal before delivery.

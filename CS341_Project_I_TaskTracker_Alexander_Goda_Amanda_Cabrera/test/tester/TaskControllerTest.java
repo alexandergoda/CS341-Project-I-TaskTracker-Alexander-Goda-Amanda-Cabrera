@@ -188,4 +188,58 @@ public class TaskControllerTest {
         assertNotNull(unchanged);
         assertFalse(unchanged.isCompleted());
     }
+    /** Verifies session boundaries for every public task operation. */
+    @Test
+    void loggedOutUserCannotReadOrChangeTasks() throws Exception {
+        Task task = taskController.createTask("Session test", "", null, null, null);
+        authController.logout();
+
+        assertThrows(IllegalStateException.class, () -> taskController.getRelevantTasks());
+        assertThrows(IllegalStateException.class, () -> taskController.getCreatedTasks());
+        assertThrows(IllegalStateException.class, () -> taskController.getAssignedTasks());
+        assertThrows(IllegalStateException.class,
+                () -> taskController.createTask("Blocked", "", null, null, null));
+        assertThrows(IllegalStateException.class,
+                () -> taskController.updateTask(task.getTaskId(), "Blocked", "", null, null, null));
+        assertThrows(IllegalStateException.class,
+                () -> taskController.assignTask(task.getTaskId(), amanda));
+        assertThrows(IllegalStateException.class,
+                () -> taskController.markCompleted(task.getTaskId(), true));
+        assertThrows(IllegalStateException.class,
+                () -> taskController.deleteTask(task.getTaskId()));
+        assertEquals("Session test", taskDAO.findById(task.getTaskId()).getTitle());
+        assertFalse(taskDAO.findById(task.getTaskId()).isCompleted());
+    }
+
+    /** Covers optional defaults, self-assignment, reopening, and removing assignment. */
+    @Test
+    void creatorCanReopenSelfAssignedTaskAndRemoveOptionalValues() throws Exception {
+        User creator = authController.getCurrentUser();
+        Task task = taskController.createTask("Self assigned", "", creator, null, null);
+        Task stored = taskDAO.findById(task.getTaskId());
+        assertEquals(Priority.MEDIUM, stored.getPriority());
+        assertNull(stored.getDueDate());
+        assertEquals(1, taskController.getRelevantTasks().size());
+        assertTrue(taskController.markCompleted(task.getTaskId(), true));
+        assertTrue(taskDAO.findById(task.getTaskId()).isCompleted());
+        assertTrue(taskController.markCompleted(task.getTaskId(), false));
+        assertFalse(taskDAO.findById(task.getTaskId()).isCompleted());
+        assertTrue(taskController.assignTask(task.getTaskId(), null));
+        assertNull(taskDAO.findById(task.getTaskId()).getAssignee());
+        assertEquals(1, taskController.getRelevantTasks().size());
+        assertTrue(taskController.getAssignedTasks().isEmpty());
+    }
+
+    /** Invalid titles must leave persisted data unchanged. */
+    @Test
+    void blankTitleCannotCreateOrOverwriteTask() throws Exception {
+        Task task = taskController.createTask("Keep this title", "", null, null, Priority.LOW);
+        assertThrows(IllegalArgumentException.class,
+                () -> taskController.createTask("   ", "", null, null, null));
+        assertThrows(IllegalArgumentException.class,
+                () -> taskController.updateTask(task.getTaskId(), " ", "", amanda, null, null));
+        assertEquals(1, taskController.getRelevantTasks().size());
+        assertEquals("Keep this title", taskDAO.findById(task.getTaskId()).getTitle());
+        assertNull(taskDAO.findById(task.getTaskId()).getAssignee());
+    }
 }
