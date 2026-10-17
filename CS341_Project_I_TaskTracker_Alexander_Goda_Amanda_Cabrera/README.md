@@ -8,9 +8,9 @@
 
 Task Tracker is a standalone collaborative to-do list desktop application developed in Java.
 
-The application is designed to allow registered users to manage tasks through individual local accounts. Users will be able to register, log in and log out, create tasks, edit tasks, delete tasks, mark tasks as complete, assign tasks to registered users, and view tasks they created or that were assigned to them.
+The application allows registered users to manage tasks through individual local accounts. Users can register, log in and log out, create tasks, edit tasks, delete tasks, mark tasks as complete, assign tasks to registered users, and view tasks they created or that were assigned to them.
 
-The project uses task due dates and priority levels as its additional task-management feature.
+Task due dates and priority levels are included as the project's additional task-management feature.
 
 ## Project Objectives
 
@@ -28,6 +28,7 @@ The primary objectives of Task Tracker are to:
 
 - Java 11 or newer
 - Eclipse IDE
+- Java Swing
 - SQLite
 - JDBC
 - Xerial SQLite JDBC driver
@@ -40,9 +41,9 @@ Task Tracker follows the Model-View-Controller architectural pattern.
 
 ### Model and Persistence
 
-The model and persistence layers manage the application's data and database operations.
+The model and persistence layers manage application data and database operations.
 
-Current classes include:
+Classes include:
 
 - `User`
 - `Task`
@@ -55,29 +56,46 @@ SQLite is used for local persistent storage through JDBC.
 
 ### Controller
 
-The controller layer coordinates actions between the user interface and the model/persistence layer.
+The controller layer coordinates actions between the graphical user interface and the model/persistence layer.
 
-Planned controller classes include:
+Controller classes include:
 
 - `AuthController`
 - `TaskController`
 
+`AuthController` manages registration, login, logout, and authenticated-user state.
+
+`TaskController` manages task operations and enforces permissions for task editing, deletion, assignment, and completion.
+
 ### View
 
-The view layer will provide the Swing graphical user interface for:
+The view layer provides the Swing graphical user interface.
+
+View classes include:
+
+- `LoginView`
+- `RegisterView`
+- `TaskDashboardView`
+- `TaskEditorView`
+
+The interface supports:
 
 - registration
-- login
-- task dashboard
-- task creation and editing
+- login and logout
+- task dashboard viewing
+- task creation
+- task editing
 - task assignment
-- task completion and deletion
+- task completion
+- task deletion
+- due-date entry
+- priority selection
 
 ## Database
 
 The application uses a local SQLite database.
 
-The current database design includes:
+The database contains two primary tables.
 
 ### Users
 
@@ -95,28 +113,45 @@ Stores task information including:
 - due date
 - priority level
 
-The database tables are created automatically when the application initializes.
+The database and required tables are created automatically when the application initializes.
 
 ## Current Implementation Status
 
 The following components have been implemented:
 
 - Java 11 Eclipse project structure
+- Model-View-Controller architecture
 - `User`, `Task`, and `Priority` model classes
 - SQLite database initialization
-- user persistence and authentication queries
-- task creation, retrieval, editing, deletion, assignment, and completion operations
-- retrieval of tasks created by or assigned to a user
-- database schema
-- JUnit 5 tests for the database and persistence layer
-
-The controller and graphical user interface layers are currently under development.
+- user registration and authentication
+- login and logout
+- task creation
+- task retrieval
+- task editing
+- task deletion
+- task assignment and unassignment
+- task completion
+- retrieval of tasks created by or assigned to the logged-in user
+- task due dates
+- LOW, MEDIUM, and HIGH priority levels
+- Swing login and registration screens
+- authenticated task dashboard
+- task creation and editing interface
+- persistent local storage between sessions
+- automated JUnit 5 testing
+- manual and visual integration testing
 
 ## Testing
 
 JUnit 5 is used for automated testing.
 
-The current automated test suite includes tests for:
+The current automated test suite contains **25 passing tests** with:
+
+- **25/25 runs**
+- **0 errors**
+- **0 failures**
+
+The automated tests cover:
 
 - database initialization
 - foreign-key behavior
@@ -124,6 +159,7 @@ The current automated test suite includes tests for:
 - duplicate usernames
 - user lookup
 - authentication
+- login and logout state
 - task creation
 - task retrieval
 - task editing
@@ -131,8 +167,28 @@ The current automated test suite includes tests for:
 - task completion
 - task deletion
 - persistence of task due dates and priorities
+- creator edit permissions
+- creator delete permissions
+- prevention of unauthorized editing
+- prevention of unauthorized deletion
+- assignee completion permissions
+- prevention of completion by unrelated users
 
-Manual and visual testing will also be performed as the controller and GUI layers are integrated.
+Manual and visual testing has also been performed through the Swing interface.
+
+Verified GUI workflows include:
+
+- registering local user accounts
+- logging in and logging out
+- creating tasks
+- editing existing tasks
+- assigning tasks to another registered user
+- viewing assigned tasks from the assignee account
+- marking assigned tasks as complete
+- confirming completion changes persist between accounts
+- deleting tasks
+- confirming deleted tasks no longer appear
+- verifying task information persists through SQLite between login sessions
 
 ## Project Structure
 
@@ -141,12 +197,29 @@ src/
 └── tasktracker/
     ├── Main.java
     ├── model/
+    │   ├── User.java
+    │   ├── Task.java
+    │   └── Priority.java
     ├── data/
+    │   ├── DatabaseManager.java
+    │   ├── UserDAO.java
+    │   └── TaskDAO.java
     ├── controller/
+    │   ├── AuthController.java
+    │   └── TaskController.java
     └── view/
+        ├── LoginView.java
+        ├── RegisterView.java
+        ├── TaskDashboardView.java
+        └── TaskEditorView.java
 
 test/
 └── tester/
+    ├── DatabaseManagerTest.java
+    ├── UserDAOTest.java
+    ├── TaskDAOTest.java
+    ├── AuthControllerTest.java
+    └── TaskControllerTest.java
 
 sql/
 └── schema.sql

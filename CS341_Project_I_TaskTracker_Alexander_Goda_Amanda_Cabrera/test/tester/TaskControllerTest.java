@@ -37,9 +37,7 @@ public class TaskControllerTest {
     private TaskController taskController;
     private TaskDAO taskDAO;
 
-    private User alex;
     private User amanda;
-    private User charlie;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -54,9 +52,9 @@ public class TaskControllerTest {
         authController = new AuthController(userDAO);
         taskController = new TaskController(taskDAO, authController);
 
-        alex = authController.register("alex", "test123");
+        authController.register("alex", "test123");
         amanda = authController.register("amanda", "test123");
-        charlie = authController.register("charlie", "test123");
+        authController.register("charlie", "test123");
 
         assertTrue(authController.login("alex", "test123"));
     }
