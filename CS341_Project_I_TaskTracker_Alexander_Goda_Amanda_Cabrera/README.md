@@ -145,9 +145,9 @@ The following components have been implemented:
 
 JUnit 5 is used for automated testing.
 
-The automated suite contains 25 test methods. The recorded October 16, 2026 run completed with:
+The automated suite contains 28 test methods across five classes. The latest recorded October 16, 2026 Eclipse run completed in 0.444 seconds with:
 
-- **25/25 runs**
+- **28/28 runs**
 - **0 errors**
 - **0 failures**
 
@@ -173,6 +173,11 @@ The automated tests cover:
 - prevention of unauthorized deletion
 - assignee completion permissions
 - prevention of completion by unrelated users
+- rejection of task operations while logged out
+- self-assignment without duplicate dashboard results
+- default MEDIUM priority and optional due dates
+- completion reopening and unassignment
+- blank-title rejection without overwriting saved data
 
 Manual and visual testing has also been performed through the Swing interface.
 
@@ -228,7 +233,7 @@ docs/
 ├── Requirements/
 ├── Design/
 ├── CS341_Project_I_Testing_Report_Alexander_Goda_Amanda_Cabrera.docx
-├── IMPLEMENTATION_STATUS.md
+├── CS341_TaskTracker_Presentation.pptx
 └── VALIDATION_CHECKLIST.md
 ```
 
@@ -242,21 +247,11 @@ The Requirements Analysis retains the Week 1 baseline with recorded implementati
 - `tasks.db` is relative to the working directory. DatabaseManager executes embedded schema SQL; `sql/schema.sql` is a matching reference.
 - Navigation and dashboard refresh use Main and Runnable callbacks; views interpret controller results and exceptions.
 
-## Logout Fix and Verification
+## Session lifecycle and verification
 
-TaskDashboardView tracks each task editor it opens, removes closed editors from its list, and disposes all remaining editors when the dashboard is disposed. Logout disposes the dashboard and its editors before clearing the authenticated session and invoking the login callback.
+TaskDashboardView tracks open task editors and disposes them when the dashboard closes. Logout closes the dashboard and its editors before clearing the authenticated session and returning to login.
 
-The post-fix Eclipse JUnit rerun on October 16, 2026 completed 25/25 tests with 0 errors and 0 failures in 0.413 seconds, as shown in the 11:33 PM screenshot. The existing suite still contains 25 methods; no new automated GUI test was added.
-
-Manual regression check M10 passed: the user confirmed that both New Task and Edit Task windows closed automatically when Logout was clicked. The subsequent screenshot shows Amanda's dashboard without the old editors. This is manual GUI evidence, separate from the JUnit rerun.
-
-The original nine acceptance checks remain recorded as M01-M09; M10 is the additional logout regression check. No dedicated automated assertions were added for default MEDIUM priority, blank task titles, completion reopening, or editor/logout behavior. Blank-title rejection has manual evidence in M07.
-
-
-## Latest final audit
-
-Final audit addendum dated October 16, 2026. This addendum supersedes current-suite counts and coverage-limit statements above while preserving historical results and Week 1/Week 2 plans. The expanded Eclipse JUnit 5 suite passed 28/28 tests with 0 errors and 0 failures in 0.444 seconds. Class counts are DatabaseManagerTest 2, UserDAOTest 5, TaskDAOTest 6, AuthControllerTest 6, and TaskControllerTest 9. Three new controller tests cover rejection of every public task operation while logged out, self-assignment without duplicate dashboard results with MEDIUM default and optional date, completion and reopening followed by unassignment, and blank-title create/edit rejection with saved data unchanged. These are automated controller/SQLite checks, not GUI passes. Editor-window cleanup remains covered by the previously recorded manual M10 only. The fresh Problems tab reported 0 items in its current configuration. Production sources compiled on JDK 11.0.30 with --release 11 and -Xlint:all without diagnostics. Eclipse launched Main and reported database initialization success, but native automation could not bind to the Java window; no new manual GUI pass is claimed. See docs/FINAL_AUDIT.md and docs/FINAL_SUBMISSION_CHECKLIST.md for delivery status and limitations.
-
+The testing report records manual acceptance checks M01–M09 and the user-confirmed M10 logout regression check. Editor cleanup is covered by manual verification; the 28 automated tests exercise controllers and SQLite persistence, not Swing GUI interaction. The latest recorded automated run did not repeat all manual GUI checks.
 
 ## Running a clean checkout
 
@@ -266,6 +261,11 @@ Final audit addendum dated October 16, 2026. This addendum supersedes current-su
 4. Refresh the project, confirm JavaSE-11 and JUnit 5 in the build path, and build. The classpath uses relative paths.
 5. Run `src/tasktracker/Main.java` as a Java Application. Use this project directory as the working directory for a consistent local `tasks.db`.
 6. Register a local account, close the registration window, then log in. The application creates its database and tables automatically.
-7. Run the entire `test/tester` package as JUnit Test. The latest inventory is 28 tests. See the final audit addendum above; older 25-test results remain historical records.
+7. Run the entire `test/tester` package as JUnit Test. The expected inventory is 28 tests. Record the actual results when rerunning the suite.
 
-Final delivery materials: `docs/FINAL_AUDIT.md`, `docs/FINAL_SUBMISSION_CHECKLIST.md`, `docs/DEMO_SCRIPT.md`, and `docs/CS341_TaskTracker_Presentation.pptx`. The presentation requires team review and rehearsal before delivery.
+## Project documentation
+
+- Requirements and use cases: `docs/Requirements/`
+- Design package and diagrams: `docs/Design/`
+- Testing report: `docs/CS341_Project_I_Testing_Report_Alexander_Goda_Amanda_Cabrera.docx`
+- Presentation: `docs/CS341_TaskTracker_Presentation.pptx`
