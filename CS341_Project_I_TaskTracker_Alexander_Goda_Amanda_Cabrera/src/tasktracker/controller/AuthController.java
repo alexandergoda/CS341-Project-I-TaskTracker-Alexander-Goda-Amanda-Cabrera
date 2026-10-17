@@ -18,6 +18,12 @@ public class AuthController {
     private final UserDAO userDAO;
     private User currentUser;
 
+    /**
+     * Creates a controller with no authenticated session.
+     *
+     * @param userDAO required persistence dependency
+     * @throws IllegalArgumentException if a required dependency is null
+     */
     public AuthController(UserDAO userDAO) {
         if (userDAO == null) {
             throw new IllegalArgumentException("userDAO is required");
@@ -26,12 +32,14 @@ public class AuthController {
     }
 
     /**
-     * Registers a new local account.
+     * Registers a local account after hashing the password with SHA-256.
      *
-     * @param username requested username
-     * @param password raw password entered by the user
-     * @return newly created user
-     * @throws SQLException if the account cannot be stored
+     * @param username nonblank username; surrounding whitespace is removed
+     * @param password nonempty raw password; whitespace is preserved
+     * @return newly persisted user; does not log the user in
+     * @throws IllegalArgumentException if username is blank, password is null or empty,
+     *         or the username is taken
+     * @throws SQLException if database access fails
      */
     public User register(String username, String password) throws SQLException {
         validateUsernameAndPassword(username, password);
@@ -42,9 +50,13 @@ public class AuthController {
     }
 
     /**
-     * Attempts to log in and stores the authenticated user when successful.
+     * Authenticates credentials and replaces the current session user.
+     * Invalid or unmatched credentials clear the session; database errors propagate.
      *
-     * @return true when the credentials match a registered account
+     * @param username account username, trimmed for lookup
+     * @param password raw password to hash and compare
+     * @return true if authenticated; false for invalid or unmatched credentials
+     * @throws SQLException if database access fails
      */
     public boolean login(String username, String password) throws SQLException {
         if (username == null || username.trim().isEmpty()
@@ -64,6 +76,11 @@ public class AuthController {
         currentUser = null;
     }
 
+    /**
+     * Returns the current session identity.
+     *
+     * @return authenticated user, or null while logged out
+     */
     public User getCurrentUser() {
         return currentUser;
     }
@@ -73,7 +90,10 @@ public class AuthController {
     }
 
     /**
-     * Returns registered users for task-assignment controls.
+     * Loads users for assignment controls; does not require a login.
+     *
+     * @return registered users ordered by username, possibly empty
+     * @throws SQLException if database access fails
      */
     public List<User> getRegisteredUsers() throws SQLException {
         return userDAO.findAll();

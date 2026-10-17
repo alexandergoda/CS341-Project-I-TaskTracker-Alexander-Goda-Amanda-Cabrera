@@ -19,6 +19,12 @@ import tasktracker.model.User;
 public class UserDAO {
     private final DatabaseManager databaseManager;
 
+    /**
+     * Creates a data-access object using the supplied database manager.
+     *
+     * @param databaseManager required persistence dependency
+     * @throws IllegalArgumentException if a required dependency is null
+     */
     public UserDAO(DatabaseManager databaseManager) {
         if (databaseManager == null) {
             throw new IllegalArgumentException("databaseManager is required");
@@ -27,8 +33,13 @@ public class UserDAO {
     }
 
     /**
-     * Creates a registered user. This method accepts a password hash rather than
-     * a raw password so credential transformation can remain outside persistence.
+     * Stores an account using an already-hashed password; does not authenticate it.
+     *
+     * @param username nonblank username, trimmed before storage
+     * @param passwordHash nonempty password hash, stored unchanged
+     * @return persisted user with a generated identifier and no password data
+     * @throws IllegalArgumentException if username is blank or hash is null or empty
+     * @throws SQLException if storage fails, including duplicate usernames
      */
     public User createUser(String username, String passwordHash) throws SQLException {
         validateCredentials(username, passwordHash);
@@ -54,6 +65,13 @@ public class UserDAO {
         return saved;
     }
 
+    /**
+     * Looks up a user by database ID.
+     *
+     * @param userId identifier to look up
+     * @return matching user, or null if absent
+     * @throws SQLException if database access fails
+     */
     public User findById(int userId) throws SQLException {
         String sql = "SELECT user_id, username FROM users WHERE user_id = ?";
         try (Connection connection = databaseManager.getConnection();
@@ -65,6 +83,13 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Looks up a user by trimmed username.
+     *
+     * @param username username to match
+     * @return matching user, or null for blank input or no match
+     * @throws SQLException if database access fails
+     */
     public User findByUsername(String username) throws SQLException {
         if (username == null || username.trim().isEmpty()) {
             return null;
@@ -80,8 +105,12 @@ public class UserDAO {
     }
 
     /**
-     * Returns the matching user when the supplied username and already-hashed
-     * password match a stored account; otherwise returns null.
+     * Matches an account against an already-hashed password without changing a session.
+     *
+     * @param username username, trimmed for lookup
+     * @param passwordHash hash to compare, not a raw password
+     * @return matching user, or null for invalid input or no match
+     * @throws SQLException if database access fails
      */
     public User authenticate(String username, String passwordHash) throws SQLException {
         if (username == null || username.trim().isEmpty() || passwordHash == null) {
@@ -98,10 +127,23 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Checks whether a username is registered.
+     *
+     * @param username username, trimmed for lookup
+     * @return true for a match; false for blank input or no match
+     * @throws SQLException if database access fails
+     */
     public boolean usernameExists(String username) throws SQLException {
         return findByUsername(username) != null;
     }
 
+    /**
+     * Loads registered users without password data.
+     *
+     * @return users ordered by username, possibly empty
+     * @throws SQLException if database access fails
+     */
     public List<User> findAll() throws SQLException {
         String sql = "SELECT user_id, username FROM users ORDER BY username";
         List<User> users = new ArrayList<>();

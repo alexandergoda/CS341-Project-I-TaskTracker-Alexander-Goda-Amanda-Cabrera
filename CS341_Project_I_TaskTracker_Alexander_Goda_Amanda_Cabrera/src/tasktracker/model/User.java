@@ -18,7 +18,8 @@ public class User {
      * Constructs a persisted user.
      *
      * @param userId positive database identifier
-     * @param username unique nonblank username
+     * @param username nonblank username, trimmed here; uniqueness is enforced by storage
+     * @throws IllegalArgumentException if userId is not positive or username is blank
      */
     public User(int userId, String username) {
         if (userId <= 0) {
@@ -39,11 +40,22 @@ public class User {
         return username;
     }
 
+    /**
+     * Provides the account name for display controls.
+     *
+     * @return username without password data
+     */
     @Override
     public String toString() {
         return username;
     }
 
+    /**
+     * Compares persisted identity using only the user ID.
+     *
+     * @param obj object to compare
+     * @return true for a User with the same ID, regardless of username
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -56,6 +68,11 @@ public class User {
         return userId == other.userId;
     }
 
+    /**
+     * Hashes persisted identity consistently with equals.
+     *
+     * @return hash derived from the user ID
+     */
     @Override
     public int hashCode() {
         return Objects.hash(userId);

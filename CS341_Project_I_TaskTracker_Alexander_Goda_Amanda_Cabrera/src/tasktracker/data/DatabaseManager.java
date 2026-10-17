@@ -39,6 +39,10 @@ public class DatabaseManager {
 
     private final String databaseFile;
 
+    /**
+     * Creates a manager for tasks.db relative to the working directory.
+     * Construction does not open a connection or create tables.
+     */
     public DatabaseManager() {
         this(DEFAULT_DATABASE_FILE);
     }
@@ -47,7 +51,8 @@ public class DatabaseManager {
      * Creates a manager for a specified SQLite file. The overload is useful for
      * JUnit because every test can use an isolated temporary database.
      *
-     * @param databaseFile local SQLite file path
+     * @param databaseFile local SQLite file path; relative paths use the working directory
+     * @throws IllegalArgumentException if the path is null or blank
      */
     public DatabaseManager(String databaseFile) {
         if (databaseFile == null || databaseFile.trim().isEmpty()) {
@@ -63,7 +68,7 @@ public class DatabaseManager {
     /**
      * Opens a SQLite connection and enables foreign-key enforcement.
      *
-     * @return open JDBC connection
+     * @return open JDBC connection that the caller must close
      * @throws SQLException if the driver or database connection is unavailable
      */
     public Connection getConnection() throws SQLException {
@@ -82,7 +87,9 @@ public class DatabaseManager {
 
     /**
      * Creates the production tables on first run. Calling this method again is
-     * safe because both statements use IF NOT EXISTS.
+     * safe because both statements use IF NOT EXISTS. Connections are closed here.
+     *
+     * @throws SQLException if connecting or creating either table fails
      */
     public void initializeDatabase() throws SQLException {
         try (Connection connection = getConnection();

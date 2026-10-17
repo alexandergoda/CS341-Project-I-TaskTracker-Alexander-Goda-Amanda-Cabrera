@@ -31,6 +31,12 @@ public class TaskDAO {
 
     private final DatabaseManager databaseManager;
 
+    /**
+     * Creates a data-access object using the supplied database manager.
+     *
+     * @param databaseManager required persistence dependency
+     * @throws IllegalArgumentException if a required dependency is null
+     */
     public TaskDAO(DatabaseManager databaseManager) {
         if (databaseManager == null) {
             throw new IllegalArgumentException("databaseManager is required");
@@ -39,7 +45,13 @@ public class TaskDAO {
     }
 
     /**
-     * Persists a new task and assigns its generated identifier to the object.
+     * Inserts a task and writes its generated ID back to the same object.
+     * This layer does not check session permissions.
+     *
+     * @param task task whose creator and optional assignee are persisted users
+     * @return the supplied task with its generated ID
+     * @throws IllegalArgumentException if task is null or a user is not persisted
+     * @throws SQLException if database access fails
      */
     public Task createTask(Task task) throws SQLException {
         validatePersistableTask(task);
@@ -60,6 +72,13 @@ public class TaskDAO {
         throw new SQLException("Task was inserted but no generated key was returned.");
     }
 
+    /**
+     * Looks up a task by database ID.
+     *
+     * @param taskId identifier to look up
+     * @return matching task, or null if absent
+     * @throws SQLException if database access fails
+     */
     public Task findById(int taskId) throws SQLException {
         String sql = TASK_SELECT + "WHERE t.task_id = ?";
         try (Connection connection = databaseManager.getConnection();
@@ -72,7 +91,12 @@ public class TaskDAO {
     }
 
     /**
-     * Returns all tasks created by or assigned to the specified user.
+     * Loads tasks created by or assigned to a user without checking session permissions.
+     *
+     * @param userId user identifier to match
+     * @return tasks ordered open first, then by ID; possibly empty; no duplicates for
+     *         self-assignment
+     * @throws SQLException if database access fails
      */
     public List<Task> findRelevantTasks(int userId) throws SQLException {
         String sql = TASK_SELECT
@@ -81,18 +105,39 @@ public class TaskDAO {
         return findTaskList(sql, userId, userId);
     }
 
+    /**
+     * Loads tasks created by a user without checking session permissions.
+     *
+     * @param userId user identifier to match
+     * @return tasks ordered open first, then by ID; possibly empty
+     * @throws SQLException if database access fails
+     */
     public List<Task> findCreatedTasks(int userId) throws SQLException {
         String sql = TASK_SELECT + "WHERE t.creator_id = ? ORDER BY t.completed ASC, t.task_id ASC";
         return findTaskList(sql, userId);
     }
 
+    /**
+     * Loads tasks assigned to a user without checking session permissions.
+     *
+     * @param userId user identifier to match
+     * @return tasks ordered open first, then by ID; possibly empty
+     * @throws SQLException if database access fails
+     */
     public List<Task> findAssignedTasks(int userId) throws SQLException {
         String sql = TASK_SELECT + "WHERE t.assignee_id = ? ORDER BY t.completed ASC, t.task_id ASC";
         return findTaskList(sql, userId);
     }
 
     /**
-     * Updates editable task details. Creator ownership is deliberately not changed.
+     * Stores task details and completion state while preserving stored creator ownership.
+     * This layer does not check session permissions.
+     *
+     * @param task task with a positive ID and persisted creator and optional assignee
+     * @return true if one row was updated; false if the ID was not found
+     * @throws IllegalArgumentException if task is null, its ID is not positive, or a user is
+     *         not persisted
+     * @throws SQLException if database access fails
      */
     public boolean updateTask(Task task) throws SQLException {
         if (task == null || task.getTaskId() <= 0) {
@@ -114,6 +159,15 @@ public class TaskDAO {
         }
     }
 
+    /**
+     * Stores assignment without checking session permissions.
+     *
+     * @param taskId database task identifier
+     * @param assignee persisted user, or null to unassign
+     * @return true if one row was changed; false if the ID was not found
+     * @throws IllegalArgumentException if the assignee is not persisted
+     * @throws SQLException if database access fails
+     */
     public boolean assignTask(int taskId, User assignee) throws SQLException {
         String sql = "UPDATE tasks SET assignee_id = ? WHERE task_id = ?";
         try (Connection connection = databaseManager.getConnection();
@@ -124,6 +178,14 @@ public class TaskDAO {
         }
     }
 
+    /**
+     * Stores completion state without checking session permissions.
+     *
+     * @param taskId database task identifier
+     * @param completed true to complete; false to reopen
+     * @return true if one row was changed; false if the ID was not found
+     * @throws SQLException if database access fails
+     */
     public boolean markCompleted(int taskId, boolean completed) throws SQLException {
         String sql = "UPDATE tasks SET completed = ? WHERE task_id = ?";
         try (Connection connection = databaseManager.getConnection();
@@ -134,6 +196,13 @@ public class TaskDAO {
         }
     }
 
+    /**
+     * Deletes a task permanently without checking session permissions.
+     *
+     * @param taskId database task identifier
+     * @return true if one row was changed; false if the ID was not found
+     * @throws SQLException if database access fails
+     */
     public boolean deleteTask(int taskId) throws SQLException {
         String sql = "DELETE FROM tasks WHERE task_id = ?";
         try (Connection connection = databaseManager.getConnection();

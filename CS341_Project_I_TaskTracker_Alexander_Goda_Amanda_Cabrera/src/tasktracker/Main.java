@@ -20,6 +20,12 @@ import tasktracker.view.TaskDashboardView;
  */
 public class Main {
 
+    /**
+     * Initializes the local database and schedules the login UI on the Swing event thread.
+     * Database initialization failures are printed to standard error and prevent UI startup.
+     *
+     * @param args command-line arguments; ignored
+     */
     public static void main(String[] args) {
         DatabaseManager databaseManager = new DatabaseManager();
 

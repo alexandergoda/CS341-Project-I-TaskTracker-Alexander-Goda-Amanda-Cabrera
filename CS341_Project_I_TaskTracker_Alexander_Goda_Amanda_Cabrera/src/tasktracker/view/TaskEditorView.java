@@ -46,6 +46,17 @@ public class TaskEditorView extends JFrame {
     private JButton saveButton;
     private JButton cancelButton;
 
+    /**
+     * Creates the window without showing it. Loads assignment choices and existing values
+     * immediately.
+     * Construct and use on the Swing event thread.
+     *
+     * @param authController required authentication controller
+     * @param taskController required task controller
+     * @param taskToEdit existing task, or null to create a new task
+     * @param saveSuccessAction callback after saving and disposing, or null
+     * @throws IllegalArgumentException if a required controller is null
+     */
     public TaskEditorView(AuthController authController,
             TaskController taskController,
             Task taskToEdit,

@@ -32,6 +32,14 @@ public class RegisterView extends JFrame {
     private JButton cancelButton;
     private JLabel feedbackLabel;
 
+    /**
+     * Creates the window without showing it. Successful registration leaves the window open
+     * and does not log the user in.
+     * Construct and use on the Swing event thread.
+     *
+     * @param authController required authentication controller
+     * @throws IllegalArgumentException if a required controller is null
+     */
     public RegisterView(AuthController authController) {
         if (authController == null) {
             throw new IllegalArgumentException("authController is required");

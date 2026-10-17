@@ -51,6 +51,16 @@ public class TaskDashboardView extends JFrame {
     private List<Task> visibleTasks;
     private final List<TaskEditorView> openEditors = new ArrayList<TaskEditorView>();
 
+    /**
+     * Creates the window without showing it. Loads tasks immediately and owns editors that
+     * are disposed with this dashboard.
+     * Construct and use on the Swing event thread.
+     *
+     * @param authController required session controller
+     * @param taskController required task controller
+     * @param logoutAction callback after disposal and logout, or null
+     * @throws IllegalArgumentException if a required controller is null
+     */
     public TaskDashboardView(AuthController authController,
             TaskController taskController, Runnable logoutAction) {
 
@@ -194,7 +204,9 @@ public class TaskDashboardView extends JFrame {
     }
 
     /**
-     * Reloads tasks created by or assigned to the current user.
+     * Reloads tasks created by or assigned to the current user into the table.
+     * Reports database or missing-session errors in the feedback label.
+     * Call on the Swing event thread.
      */
     public void refreshTasks() {
         try {

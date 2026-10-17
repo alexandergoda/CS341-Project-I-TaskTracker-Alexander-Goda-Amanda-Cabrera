@@ -31,10 +31,26 @@ public class LoginView extends JFrame {
     private JButton registerButton;
     private JLabel feedbackLabel;
 
+    /**
+     * Creates a login window that stays open after successful authentication.
+     * Construct and use on the Swing event thread.
+     *
+     * @param authController required authentication controller
+     * @throws IllegalArgumentException if the controller is null
+     */
     public LoginView(AuthController authController) {
         this(authController, null);
     }
 
+    /**
+     * Creates a login window. Login success disposes the window and invokes the callback
+     * when supplied.
+     * Construct and use on the Swing event thread.
+     *
+     * @param authController required authentication controller
+     * @param loginSuccessAction callback after login, or null to keep this window open
+     * @throws IllegalArgumentException if the controller is null
+     */
     public LoginView(AuthController authController, Runnable loginSuccessAction) {
         if (authController == null) {
             throw new IllegalArgumentException("authController is required");
@@ -162,9 +178,9 @@ public class LoginView extends JFrame {
     }
 
     /**
-     * Pre-fills the username field after a successful registration.
+     * Sets the username field and requests keyboard focus for the password field.
      *
-     * @param username username to display in the login field
+     * @param username username to display; null clears the field
      */
     public void setUsername(String username) {
         usernameField.setText(username == null ? "" : username);
