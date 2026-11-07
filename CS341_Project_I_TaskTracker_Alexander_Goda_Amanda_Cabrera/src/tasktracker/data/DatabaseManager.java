@@ -14,42 +14,31 @@ import java.sql.Statement;
 public class DatabaseManager {
     public static final String DEFAULT_DATABASE_FILE = "tasks.db";
 
-    private static final String CREATE_USERS =
-            "CREATE TABLE IF NOT EXISTS users ("
-            + "user_id INTEGER PRIMARY KEY AUTOINCREMENT, "
-            + "username TEXT NOT NULL UNIQUE, "
-            + "password_hash TEXT NOT NULL"
-            + ")";
+    private static final String CREATE_USERS = "CREATE TABLE IF NOT EXISTS users ("
+            + "user_id INTEGER PRIMARY KEY AUTOINCREMENT, " + "username TEXT NOT NULL UNIQUE, "
+            + "password_hash TEXT NOT NULL" + ")";
 
-    private static final String CREATE_TASKS =
-            "CREATE TABLE IF NOT EXISTS tasks ("
-            + "task_id INTEGER PRIMARY KEY AUTOINCREMENT, "
-            + "title TEXT NOT NULL, "
-            + "description TEXT, "
-            + "creator_id INTEGER NOT NULL, "
-            + "assignee_id INTEGER, "
-            + "due_date TEXT, "
-            + "priority TEXT NOT NULL DEFAULT 'MEDIUM' "
-            + "CHECK (priority IN ('LOW','MEDIUM','HIGH')), "
-            + "completed INTEGER NOT NULL DEFAULT 0 "
-            + "CHECK (completed IN (0,1)), "
+    private static final String CREATE_TASKS = "CREATE TABLE IF NOT EXISTS tasks ("
+            + "task_id INTEGER PRIMARY KEY AUTOINCREMENT, " + "title TEXT NOT NULL, " + "description TEXT, "
+            + "creator_id INTEGER NOT NULL, " + "assignee_id INTEGER, " + "due_date TEXT, "
+            + "priority TEXT NOT NULL DEFAULT 'MEDIUM' " + "CHECK (priority IN ('LOW','MEDIUM','HIGH')), "
+            + "completed INTEGER NOT NULL DEFAULT 0 " + "CHECK (completed IN (0,1)), "
             + "FOREIGN KEY (creator_id) REFERENCES users(user_id), "
-            + "FOREIGN KEY (assignee_id) REFERENCES users(user_id)"
-            + ")";
+            + "FOREIGN KEY (assignee_id) REFERENCES users(user_id)" + ")";
 
     private final String databaseFile;
 
     /**
-     * Creates a manager for tasks.db relative to the working directory.
-     * Construction does not open a connection or create tables.
+     * Creates a manager for tasks.db relative to the working directory. Construction does not open a connection or
+     * create tables.
      */
     public DatabaseManager() {
         this(DEFAULT_DATABASE_FILE);
     }
 
     /**
-     * Creates a manager for a specified SQLite file. The overload is useful for
-     * JUnit because every test can use an isolated temporary database.
+     * Creates a manager for a specified SQLite file. The overload is useful for JUnit because every test can use an
+     * isolated temporary database.
      *
      * @param databaseFile local SQLite file path; relative paths use the working directory
      * @throws IllegalArgumentException if the path is null or blank
@@ -86,14 +75,13 @@ public class DatabaseManager {
     }
 
     /**
-     * Creates the production tables on first run. Calling this method again is
-     * safe because both statements use IF NOT EXISTS. Connections are closed here.
+     * Creates the production tables on first run. Calling this method again is safe because both statements use IF NOT
+     * EXISTS. Connections are closed here.
      *
      * @throws SQLException if connecting or creating either table fails
      */
     public void initializeDatabase() throws SQLException {
-        try (Connection connection = getConnection();
-             Statement statement = connection.createStatement()) {
+        try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
             statement.executeUpdate(CREATE_USERS);
             statement.executeUpdate(CREATE_TASKS);
         }

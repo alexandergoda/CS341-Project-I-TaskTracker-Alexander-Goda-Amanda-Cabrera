@@ -1,0 +1,10 @@
+tasktracker
+tasktracker.controller
+tasktracker.data
+tasktracker.model
+tasktracker.view
+tasktracker.view.animation
+tasktracker.view.components
+tasktracker.view.presentation
+tasktracker.view.screens
+tasktracker.view.theme

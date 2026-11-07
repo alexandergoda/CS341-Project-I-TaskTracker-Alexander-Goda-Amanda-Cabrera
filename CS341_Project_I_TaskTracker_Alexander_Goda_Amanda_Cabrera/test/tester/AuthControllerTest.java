@@ -31,8 +31,7 @@ public class AuthControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        DatabaseManager databaseManager =
-                new DatabaseManager(tempDir.resolve("auth-controller-test.db").toString());
+        DatabaseManager databaseManager = new DatabaseManager(tempDir.resolve("auth-controller-test.db").toString());
         databaseManager.initializeDatabase();
 
         UserDAO userDAO = new UserDAO(databaseManager);
@@ -75,20 +74,14 @@ public class AuthControllerTest {
     void duplicateUsernameIsRejected() throws Exception {
         authController.register("alex", "Password123");
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> authController.register("alex", "AnotherPassword"));
+        assertThrows(IllegalArgumentException.class, () -> authController.register("alex", "AnotherPassword"));
     }
 
     @Test
     void blankRegistrationIsRejected() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> authController.register("   ", "Password123"));
+        assertThrows(IllegalArgumentException.class, () -> authController.register("   ", "Password123"));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> authController.register("alex", ""));
+        assertThrows(IllegalArgumentException.class, () -> authController.register("alex", ""));
     }
 
     @Test

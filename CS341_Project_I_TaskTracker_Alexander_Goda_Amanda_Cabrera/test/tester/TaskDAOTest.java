@@ -50,8 +50,8 @@ public class TaskDAOTest {
 
     @Test
     void createTaskPersistsCoreFieldsDueDateAndPriority() throws Exception {
-        Task task = new Task("Finish UML", "Review class relationships", alex, amanda,
-                LocalDate.of(2026, 10, 22), Priority.HIGH);
+        Task task = new Task("Finish UML", "Review class relationships", alex, amanda, LocalDate.of(2026, 10, 22),
+                Priority.HIGH);
 
         taskDAO.createTask(task);
         Task loaded = taskDAO.findById(task.getTaskId());
@@ -76,8 +76,7 @@ public class TaskDAOTest {
 
     @Test
     void updateTaskChangesEditableValues() throws Exception {
-        Task task = taskDAO.createTask(new Task("Old title", "Old description", alex, null,
-                null, Priority.LOW));
+        Task task = taskDAO.createTask(new Task("Old title", "Old description", alex, null, null, Priority.LOW));
         task.setTitle("New title");
         task.setDescription("New description");
         task.setAssignee(amanda);
@@ -93,16 +92,14 @@ public class TaskDAOTest {
 
     @Test
     void markCompletedPersistsCompletionState() throws Exception {
-        Task task = taskDAO.createTask(new Task("Test completion", "", alex, amanda,
-                null, Priority.MEDIUM));
+        Task task = taskDAO.createTask(new Task("Test completion", "", alex, amanda, null, Priority.MEDIUM));
         assertTrue(taskDAO.markCompleted(task.getTaskId(), true));
         assertTrue(taskDAO.findById(task.getTaskId()).isCompleted());
     }
 
     @Test
     void assignTaskCanAssignAndUnassignRegisteredUser() throws Exception {
-        Task task = taskDAO.createTask(new Task("Assign me", "", alex, null,
-                null, Priority.MEDIUM));
+        Task task = taskDAO.createTask(new Task("Assign me", "", alex, null, null, Priority.MEDIUM));
 
         assertTrue(taskDAO.assignTask(task.getTaskId(), amanda));
         assertEquals("amanda", taskDAO.findById(task.getTaskId()).getAssignee().getUsername());
@@ -113,8 +110,7 @@ public class TaskDAOTest {
 
     @Test
     void deleteTaskRemovesTask() throws Exception {
-        Task task = taskDAO.createTask(new Task("Delete me", "", alex, null,
-                null, Priority.MEDIUM));
+        Task task = taskDAO.createTask(new Task("Delete me", "", alex, null, null, Priority.MEDIUM));
         assertTrue(taskDAO.deleteTask(task.getTaskId()));
         assertNull(taskDAO.findById(task.getTaskId()));
     }

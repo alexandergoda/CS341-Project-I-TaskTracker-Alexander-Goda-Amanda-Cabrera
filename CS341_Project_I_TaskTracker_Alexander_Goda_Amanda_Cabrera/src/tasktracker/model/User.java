@@ -3,8 +3,7 @@ package tasktracker.model;
 import java.util.Objects;
 
 /**
- * Represents a registered Task Tracker user.
- * Password data is intentionally kept out of the domain object and remains
+ * Represents a registered Task Tracker user. Password data is intentionally kept out of the domain object and remains
  * inside the persistence/authentication boundary.
  *
  * @author Alexander Goda
@@ -17,7 +16,7 @@ public class User {
     /**
      * Constructs a persisted user.
      *
-     * @param userId positive database identifier
+     * @param userId   positive database identifier
      * @param username nonblank username, trimmed here; uniqueness is enforced by storage
      * @throws IllegalArgumentException if userId is not positive or username is blank
      */

@@ -4,237 +4,120 @@
 **Instructor:** Professor Trish Cornez  
 **Course:** CS341-01 Software Engineering
 
-## Project Overview
+## Overview
 
-Task Tracker is a standalone collaborative to-do list desktop application developed in Java.
+Task Tracker is a standalone Java Swing application with local accounts and SQLite persistence. Users can manage tasks they created or that were assigned to them. Tasks support an optional due date, optional assignment and LOW, MEDIUM or HIGH priority.
 
-The application allows registered users to manage tasks through individual local accounts. Users can register, log in and log out, create tasks, edit tasks, delete tasks, mark tasks as complete, assign tasks to registered users, and view tasks they created or that were assigned to them.
+The application uses one window with startup, sign-in/registration, a task dashboard, an inline task editor and a signed-in password-change form. Six scenic appearances share the same layout. Auto follows the local clock; manual controls select a scene or Midday/Night. The creator credit appears on all screens.
 
-Tasks support optional due dates and LOW, MEDIUM, or HIGH priorities.
+## Requirements
 
-## Project Objectives
+- JDK 11 or newer. The supplied Eclipse settings target Java 11; the recorded build and tests used Java 11.
+- Eclipse with Java development and JUnit 5 support.
+- Xerial SQLite JDBC 3.53.4.0 at `lib/sqlite-jdbc-3.53.4.0.jar`.
+- The supplied `assets` directory on the runtime classpath.
 
-The primary objectives of Task Tracker are to:
+This is a plain Eclipse Java project, not a Maven project. Source, test, resource and driver paths are relative to the project root. [lib/README.txt](lib/README.txt) gives the exact driver download, filename and checksum. The driver is available in the local working copy but is excluded from Git; a source-only checkout needs that dependency supplied separately.
 
-- provide a simple desktop interface for managing personal and assigned tasks
-- support multiple registered local users
-- persist users and tasks between application sessions
-- organize the application using Model-View-Controller architecture
-- apply object-oriented design principles and modular development
-- verify important application behavior using JUnit 5 and manual testing
-- use Git and GitHub for collaborative version control
+## Import and run in Eclipse
 
-## Technology
+1. Use **File > Import > General > Existing Projects into Workspace**. Select the project directory containing `.project` and `.classpath`, then finish the import. Preserve the supplied `.settings` directory too. Import the whole project, rather than importing only `src` or creating a second Java project around it. If the workspace already contains a project with the same name, use a separate workspace so the existing project is preserved.
+2. Follow [lib/README.txt](lib/README.txt) if the driver is missing. Refresh the project after adding it.
+3. Under **Project > Properties > Java Build Path**, confirm `src` and `test` are source folders, `JavaSE-11` and `JUnit 5` are present, and the JDBC JAR and `assets` entries resolve. Keep `test`: it contains the repeatable JUnit and standalone checks.
+4. Under **Java Compiler**, confirm project-specific compliance is **11**. Selecting JavaSE-11 alone does not replace the compiler-level check. Under **Resource**, confirm the text-file encoding is **UTF-8**. Use a Java 11 JDK for the supplied configuration; check **Installed JREs/Execution Environments** if JavaSE-11 is unresolved.
+5. Clean-build the project with **Project > Clean**. In **Run > Run Configurations > Java Application**, select `tasktracker.Main`, use Java 11, and set **Arguments > Working directory** to this project directory. Run the application.
+6. On a fresh local database, choose **Create account**, register and then sign in. There are no required shared demo credentials. The application creates `tasks.db` and the required tables automatically.
 
-- Java 11 or newer
-- Eclipse IDE
-- Java Swing
-- SQLite
-- JDBC
-- Xerial SQLite JDBC driver
-- JUnit 5
-- Git and GitHub
+The database path is relative to the launch working directory. Use the same working directory across launches to return to the same accounts and tasks. If a launch appears to have lost local data, check its working directory before creating or replacing a database.
+
+Local databases, SQLite sidecars and generated class files are excluded from Git. Preserve a working database before any replacement or reset; do not delete existing data merely to demonstrate first run. A separate disposable copy or fresh working directory can demonstrate initialization without altering the team's data.
+
+## Application behavior
+
+- Registration rejects blank usernames, empty passwords and duplicate usernames. Login and logout maintain the current local session.
+- A signed-in user can change their password from the account menu by supplying the current password and confirming the new password.
+- The dashboard includes tasks created by the current user **or** assigned to that user.
+- Only the creator can edit, delete or change assignment. The creator or assignee can mark the task done or reopen it.
+- Completed tasks remain stored and are hidden by default. **Show completed** reveals them; **Hide completed** hides them again. **Reopen** returns a task to active work.
+- The selected task's focus panel permanently shows its creator, assignee, named priority, due date and notes. Task metadata stays visible without hover.
+- Due-date entry uses U.S. month/day/year, for example `2/29/2028`, and displays as `02/29/2028` in the editor. Blank means no due date. SQLite stores an ISO date string. Invalid dates are rejected.
+- Incomplete tasks come before completed tasks. Within those groups, due dates sort earliest first with undated tasks last, then priority HIGH to LOW, then task ID. Group labels include Overdue, Today, Tomorrow, Upcoming, No date and Completed.
+- New and edited tasks use the inline form. Navigation away from a changed draft offers **Save and continue**, **Discard changes** or **Keep editing**. Keep editing preserves the draft, selection and completed-task visibility. If Save and continue fails validation, correct the field and retry the pending action.
 
 ## Architecture
 
-Task Tracker follows the Model-View-Controller architectural pattern.
+Startup follows `Main` to `TaskTrackerUI.launch`, then `ApplicationWindow` and its `AppWorkspace` coordinator.
 
-### Model and Persistence
+| Area | Responsibility |
+| --- | --- |
+| `model` | `User`, `Task` and `Priority` data types. |
+| `controller` | `AuthController` manages accounts, session and password change. `TaskController` validates task operations and permissions. |
+| `data` | `DatabaseManager` initializes the database and connections. `UserDAO` and `TaskDAO` use parameterized JDBC operations. |
+| `view` | Application window and workspace coordination. |
+| `view/screens` | `StartupSurface`, `AuthSurface`, `DashboardSurface`, `InlineEditorSurface` and `PasswordChangeSurface`. Registration is part of `AuthSurface`. |
+| `view/components` | Buttons, account/scene menus, date picker, assignment selector, priority picker and scrolling controls. |
+| `view/theme`, `view/animation`, `view/presentation` | Scene resources/lighting, transitions, credit/date display and task ordering. |
 
-The model and persistence layers manage application data and database operations.
+The schema has users and tasks, with a required creator and optional assignee foreign key. [sql/schema.sql](sql/schema.sql) is the SQL reference; `DatabaseManager` creates matching tables automatically. Passwords are stored as unsalted SHA-256 hashes. `User` model objects do not contain password data. Password-specific salted hashing and database encryption are outside the current implementation.
 
-Classes include:
+## Artwork
 
-- `User`
-- `Task`
-- `Priority`
-- `DatabaseManager`
-- `UserDAO`
-- `TaskDAO`
+Keep `assets` as the classpath resource root. The application requires these seven PNGs in `assets/scenes`:
 
-SQLite is used for local persistent storage through JDBC.
+- `background-dawn.png`
+- `background-sunrise.png`
+- `background-midday.png`
+- `background-golden-hour.png`
+- `background-dusk.png`
+- `background-night.png`
+- `foreground-dusk.png`
 
-### Controller
-
-The controller layer coordinates actions between the graphical user interface and the model/persistence layer.
-
-Controller classes include:
-
-- `AuthController`
-- `TaskController`
-
-`AuthController` manages registration, login, logout, and authenticated-user state.
-
-`TaskController` manages task operations and enforces permissions for task editing, deletion, assignment, and completion.
-
-### View
-
-The view layer provides the Swing graphical user interface.
-
-View classes include:
-
-- `LoginView`
-- `RegisterView`
-- `TaskDashboardView`
-- `TaskEditorView`
-
-The interface supports:
-
-- registration
-- login and logout
-- task dashboard viewing
-- task creation
-- task editing
-- task assignment
-- task completion and reopening
-- task deletion
-- due-date entry
-- priority selection
-
-## Database
-
-The application uses a local SQLite database.
-
-The database contains two primary tables.
-
-### Users
-
-Stores registered user account information.
-
-### Tasks
-
-Stores task information including:
-
-- task title
-- description
-- creator
-- assigned user
-- completion status
-- due date
-- priority level
-
-The database and required tables are created automatically when the application initializes.
+The renderer generates matching foreground lighting from the master foreground. The six backgrounds also provide scene-lighting references. Images load through classpath resources. The supplied project runs through Eclipse with the assets directory on its classpath.
 
 ## Testing
 
-JUnit 5 is used for automated testing.
+Run the `tester` package under the `test` source folder as **JUnit Test**. The inventory is **33 JUnit test methods across six classes**:
 
-The automated suite contains 28 test methods across five classes. The recorded results are:
+| Class | Test methods |
+| --- | ---: |
+| `DatabaseManagerTest` | 2 |
+| `UserDAOTest` | 5 |
+| `TaskDAOTest` | 6 |
+| `AuthControllerTest` | 6 |
+| `TaskControllerTest` | 9 |
+| `PasswordChangeTest` | 5 |
 
-- **28/28 runs**
-- **0 errors**
-- **0 failures**
+The suite covers initialization, application foreign-key enforcement, accounts/session rules, password changes, task CRUD, permissions, assignment, optional dates/priority, completion and reopening. It uses isolated temporary SQLite databases, so DAO/controller checks include real database integration.
 
-The automated tests cover:
+The `test/tasktracker` packages also contain **25 separate standalone check programs**, each with a `main` method. Run each as a Java Application with **VM argument** `-Djava.awt.headless=true` and the project's normal build path. The testing report lists every fully qualified check class. These cover component interactions, task presentation, unsaved-draft decisions, resource loading, rendering, transitions and callback cleanup. Count their results separately from JUnit.
 
-- database initialization
-- foreign-key behavior
-- user registration
-- duplicate usernames
-- user lookup
-- authentication
-- login and logout state
-- task creation
-- task retrieval
-- task editing
-- task assignment and unassignment
-- task completion
-- task deletion
-- persistence of task due dates and priorities
-- creator edit permissions
-- creator delete permissions
-- prevention of unauthorized editing
-- prevention of unauthorized deletion
-- assignee completion permissions
-- prevention of completion by unrelated users
-- rejection of task operations while logged out
-- self-assignment without duplicate dashboard results
-- default MEDIUM priority and optional due dates
-- completion reopening and unassignment
-- blank-title rejection without overwriting saved data
+Verification on **November 7, 2026** passed **33/33 JUnit tests** and **25/25 standalone programs**. The imported Eclipse project had **0 errors and 0 warnings**. Independent Java 11 compilation with `--release 11 -encoding UTF-8 -Xlint:all` and production JavaDoc with `-Xdoclint:all` also reported **0 errors and 0 warnings**.
 
-Manual and visual testing has also been performed through the Swing interface.
+We completed a manual walkthrough on macOS on November 7 and found no issues. The [testing report](docs/CS341_Project_I_Testing_Report_Alexander_Goda_Amanda_Cabrera.docx) documents the test procedures, results and coverage.
 
-Verified GUI workflows include:
+## JavaDoc API reference
 
-- registering local user accounts
-- logging in and logging out
-- creating tasks
-- editing existing tasks
-- assigning tasks to another registered user
-- viewing assigned tasks from the assignee account
-- marking assigned tasks as complete
-- confirming completion changes persist between accounts
-- deleting tasks
-- confirming deleted tasks no longer appear
-- verifying task information persists through SQLite between login sessions
+Open [docs/JavaDoc/index.html](docs/JavaDoc/index.html) for the included generated API documentation. It describes the production application packages under `src`. JUnit tests and standalone checks remain available as source under `test`; they are not part of the application API export.
 
-## Project Structure
+Regenerate the API documentation after changing application source or its documentation comments. In Eclipse, select the project and use **Project > Generate Javadoc**. Select the application packages under `src`, use the **JDK 11 `javadoc` executable**, and set the destination to this project's `docs/JavaDoc` directory. Keep the resolved JDBC classpath and UTF-8 source encoding. Use `-Xdoclint:all` in the additional JavaDoc options for the strict documentation check.
 
-```text
-src/
-└── tasktracker/
-    ├── Main.java
-    ├── model/
-    │   ├── User.java
-    │   ├── Task.java
-    │   └── Priority.java
-    ├── data/
-    │   ├── DatabaseManager.java
-    │   ├── UserDAO.java
-    │   └── TaskDAO.java
-    ├── controller/
-    │   ├── AuthController.java
-    │   └── TaskController.java
-    └── view/
-        ├── LoginView.java
-        ├── RegisterView.java
-        ├── TaskDashboardView.java
-        └── TaskEditorView.java
+Replace only the generated `docs/JavaDoc` tree when refreshing this export, preserving the generator's legal/license files. Keep the source, tests and other project documents intact. Open `index.html` and follow its package/class links to check the refreshed export before using it.
 
-test/
-└── tester/
-    ├── DatabaseManagerTest.java
-    ├── UserDAOTest.java
-    ├── TaskDAOTest.java
-    ├── AuthControllerTest.java
-    └── TaskControllerTest.java
+## Documentation and project folders
 
-sql/
-└── schema.sql
+| Location | Contents |
+| --- | --- |
+| `src` | Application Java source. |
+| `test` | JUnit tests and standalone check source. |
+| `assets` | Required scene artwork. |
+| `lib` | JDBC dependency and setup instructions. |
+| `sql` | Schema reference. |
+| `docs/Requirements` | Requirements analysis, use cases and SRS material. |
+| `docs/Design` | Design package with embedded architecture, schema and UML diagrams. |
+| `docs/JavaDoc` | Generated production API documentation, including `index.html`. |
+| `docs` | Testing report. |
 
-docs/
-├── Requirements/
-├── Design/
-└── CS341_Project_I_Testing_Report_Alexander_Goda_Amanda_Cabrera.docx
-```
-
-## Implementation details
-
-- The Complete control toggles Open/Complete, including reopening completed tasks.
-- The editor supports self-assignment and Unassigned; one dashboard combines created and assigned tasks, ordered by completion state and task ID.
-- AuthController hashes passwords using unsalted SHA-256. User objects contain no password data.
-- `tasks.db` is relative to the working directory. DatabaseManager executes embedded schema SQL; `sql/schema.sql` is a matching reference.
-- Navigation and dashboard refresh use Main and Runnable callbacks; views interpret controller results and exceptions.
-
-## Session lifecycle and test coverage
-
-TaskDashboardView tracks open task editors and disposes them when the dashboard closes. Logout closes the dashboard and its editors before clearing the authenticated session and returning to login.
-
-The testing report records manual acceptance checks M01–M09 and the manually verified M10 logout regression check. Editor cleanup is covered by manual verification; the 28 automated tests exercise controllers and SQLite persistence, not Swing GUI interaction.
-
-## Running a clean checkout
-
-1. Install JDK 11 or newer and use Eclipse with Java and JUnit 5 support.
-2. Import this folder with File > Import > Existing Projects into Workspace. The Git repository contains this Eclipse project inside its named subdirectory.
-3. Obtain the Xerial driver named in `lib/README.txt` and place it at `lib/sqlite-jdbc-3.53.4.0.jar`. The JAR is intentionally ignored by Git.
-4. Refresh the project, confirm JavaSE-11 and JUnit 5 in the build path, and build. The classpath uses relative paths.
-5. Run `src/tasktracker/Main.java` as a Java Application. Use this project directory as the working directory for a consistent local `tasks.db`.
-6. Register a local account, close the registration window, then log in. The application creates its database and tables automatically.
-7. Run the entire `test/tester` package as JUnit Test. The expected inventory is 28 tests.
-
-## Project documentation
-
-- Requirements and use cases: `docs/Requirements/`
-- Design package and diagrams: `docs/Design/`
-- Testing report: `docs/CS341_Project_I_Testing_Report_Alexander_Goda_Amanda_Cabrera.docx`
+- [Requirements analysis](docs/Requirements/CS341_Project_I_Requirements_Analysis_Alexander_Goda_Amanda_Cabrera.docx)
+- [Design package](docs/Design/CS341_Project_I_Design_Package_Alexander_Goda_Amanda_Cabrera.docx)
+- [Testing report](docs/CS341_Project_I_Testing_Report_Alexander_Goda_Amanda_Cabrera.docx)
+- [JavaDoc API reference](docs/JavaDoc/index.html)

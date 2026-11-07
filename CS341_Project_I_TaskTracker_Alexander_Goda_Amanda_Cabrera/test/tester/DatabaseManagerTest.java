@@ -36,9 +36,9 @@ public class DatabaseManagerTest {
     void initializeDatabaseCreatesUsersAndTasksTables() throws Exception {
         int found = 0;
         try (Connection connection = databaseManager.getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet results = statement.executeQuery(
-                     "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('users','tasks')")) {
+                Statement statement = connection.createStatement();
+                ResultSet results = statement.executeQuery(
+                        "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('users','tasks')")) {
             while (results.next()) {
                 found++;
             }
@@ -49,8 +49,8 @@ public class DatabaseManagerTest {
     @Test
     void connectionEnablesForeignKeys() throws Exception {
         try (Connection connection = databaseManager.getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet results = statement.executeQuery("PRAGMA foreign_keys")) {
+                Statement statement = connection.createStatement();
+                ResultSet results = statement.executeQuery("PRAGMA foreign_keys")) {
             assertTrue(results.next());
             assertEquals(1, results.getInt(1));
         }

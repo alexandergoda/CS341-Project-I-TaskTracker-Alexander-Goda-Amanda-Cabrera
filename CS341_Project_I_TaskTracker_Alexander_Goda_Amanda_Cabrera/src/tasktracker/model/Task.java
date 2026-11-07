@@ -21,34 +21,33 @@ public class Task {
     /**
      * Constructs a new unsaved task.
      *
-     * @param title nonblank title, trimmed before storage
+     * @param title       nonblank title, trimmed before storage
      * @param description optional description; null becomes empty and whitespace is trimmed
-     * @param creator required task owner
-     * @param assignee assigned user, or null for unassigned
-     * @param dueDate due date, or null for none
-     * @param priority priority, or null for MEDIUM
+     * @param creator     required task owner
+     * @param assignee    assigned user, or null for unassigned
+     * @param dueDate     due date, or null for none
+     * @param priority    priority, or null for MEDIUM
      * @throws IllegalArgumentException if title is blank or creator is null
      */
-    public Task(String title, String description, User creator, User assignee,
-            LocalDate dueDate, Priority priority) {
+    public Task(String title, String description, User creator, User assignee, LocalDate dueDate, Priority priority) {
         this(0, title, description, creator, assignee, dueDate, priority, false);
     }
 
     /**
      * Constructs a task loaded from persistence.
      *
-     * @param taskId identifier; zero represents an unsaved task
-     * @param title nonblank title, trimmed before storage
+     * @param taskId      identifier; zero represents an unsaved task
+     * @param title       nonblank title, trimmed before storage
      * @param description optional description; null becomes empty and whitespace is trimmed
-     * @param creator required task owner
-     * @param assignee assigned user, or null for unassigned
-     * @param dueDate due date, or null for none
-     * @param priority priority, or null for MEDIUM
-     * @param completed whether the task is complete
+     * @param creator     required task owner
+     * @param assignee    assigned user, or null for unassigned
+     * @param dueDate     due date, or null for none
+     * @param priority    priority, or null for MEDIUM
+     * @param completed   whether the task is complete
      * @throws IllegalArgumentException if taskId is negative, title is blank, or creator is null
      */
-    public Task(int taskId, String title, String description, User creator, User assignee,
-            LocalDate dueDate, Priority priority, boolean completed) {
+    public Task(int taskId, String title, String description, User creator, User assignee, LocalDate dueDate,
+            Priority priority, boolean completed) {
         if (taskId < 0) {
             throw new IllegalArgumentException("taskId cannot be negative");
         }
@@ -162,8 +161,7 @@ public class Task {
     public String toString() {
         String assignedTo = assignee == null ? "Unassigned" : assignee.getUsername();
         String due = dueDate == null ? "None" : dueDate.toString();
-        return "Task " + taskId + " | " + title + " | creator=" + creator.getUsername()
-                + " | assignedTo=" + assignedTo + " | due=" + due + " | priority=" + priority
-                + " | completed=" + completed;
+        return "Task " + taskId + " | " + title + " | creator=" + creator.getUsername() + " | assignedTo=" + assignedTo
+                + " | due=" + due + " | priority=" + priority + " | completed=" + completed;
     }
 }

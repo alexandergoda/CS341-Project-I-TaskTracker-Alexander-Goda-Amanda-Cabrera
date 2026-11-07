@@ -35,18 +35,18 @@ public class UserDAO {
     /**
      * Stores an account using an already-hashed password; does not authenticate it.
      *
-     * @param username nonblank username, trimmed before storage
+     * @param username     nonblank username, trimmed before storage
      * @param passwordHash nonempty password hash, stored unchanged
      * @return persisted user with a generated identifier and no password data
      * @throws IllegalArgumentException if username is blank or hash is null or empty
-     * @throws SQLException if storage fails, including duplicate usernames
+     * @throws SQLException             if storage fails, including duplicate usernames
      */
     public User createUser(String username, String passwordHash) throws SQLException {
         validateCredentials(username, passwordHash);
         String sql = "INSERT INTO users(username, password_hash) VALUES(?, ?)";
 
         try (Connection connection = databaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, username.trim());
             statement.setString(2, passwordHash);
             statement.executeUpdate();
@@ -75,7 +75,7 @@ public class UserDAO {
     public User findById(int userId) throws SQLException {
         String sql = "SELECT user_id, username FROM users WHERE user_id = ?";
         try (Connection connection = databaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, userId);
             try (ResultSet results = statement.executeQuery()) {
                 return results.next() ? mapUser(results) : null;
@@ -96,7 +96,7 @@ public class UserDAO {
         }
         String sql = "SELECT user_id, username FROM users WHERE username = ?";
         try (Connection connection = databaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, username.trim());
             try (ResultSet results = statement.executeQuery()) {
                 return results.next() ? mapUser(results) : null;
@@ -107,7 +107,7 @@ public class UserDAO {
     /**
      * Matches an account against an already-hashed password without changing a session.
      *
-     * @param username username, trimmed for lookup
+     * @param username     username, trimmed for lookup
      * @param passwordHash hash to compare, not a raw password
      * @return matching user, or null for invalid input or no match
      * @throws SQLException if database access fails
@@ -118,7 +118,7 @@ public class UserDAO {
         }
         String sql = "SELECT user_id, username FROM users WHERE username = ? AND password_hash = ?";
         try (Connection connection = databaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, username.trim());
             statement.setString(2, passwordHash);
             try (ResultSet results = statement.executeQuery()) {
@@ -148,13 +148,38 @@ public class UserDAO {
         String sql = "SELECT user_id, username FROM users ORDER BY username";
         List<User> users = new ArrayList<>();
         try (Connection connection = databaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet results = statement.executeQuery()) {
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet results = statement.executeQuery()) {
             while (results.next()) {
                 users.add(mapUser(results));
             }
         }
         return users;
+    }
+
+    /**
+     * Atomically replaces a hash only if the account still has the expected hash.
+     *
+     * @param userId      positive identifier of the account to update
+     * @param currentHash expected nonempty stored password hash
+     * @param newHash     nonempty replacement password hash
+     * @return true if one matching account was updated; false if the account is absent or its stored hash no longer
+     *         matches
+     * @throws IllegalArgumentException if the ID is not positive or either hash is null or empty
+     * @throws SQLException             if database access fails
+     */
+    public boolean changePassword(int userId, String currentHash, String newHash) throws SQLException {
+        if (userId < 1 || currentHash == null || currentHash.isEmpty() || newHash == null || newHash.isEmpty()) {
+            throw new IllegalArgumentException("Account and password hashes are required");
+        }
+        String sql = "UPDATE users SET password_hash = ? WHERE user_id = ? AND password_hash = ?";
+        try (Connection connection = databaseManager.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, newHash);
+            statement.setInt(2, userId);
+            statement.setString(3, currentHash);
+            return statement.executeUpdate() == 1;
+        }
     }
 
     private void validateCredentials(String username, String passwordHash) {

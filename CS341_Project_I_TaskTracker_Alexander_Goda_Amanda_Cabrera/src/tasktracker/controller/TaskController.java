@@ -10,8 +10,8 @@ import tasktracker.model.Task;
 import tasktracker.model.User;
 
 /**
- * Coordinates task operations between the views and persistence layer.
- * Permission checks are enforced here before TaskDAO changes stored data.
+ * Coordinates task operations between the views and persistence layer. Permission checks are enforced here before
+ * TaskDAO changes stored data.
  *
  * @author Amanda Cabrera
  */
@@ -22,7 +22,7 @@ public class TaskController {
     /**
      * Creates a controller for authenticated task operations.
      *
-     * @param taskDAO required persistence dependency
+     * @param taskDAO        required persistence dependency
      * @param authController required session controller
      * @throws IllegalArgumentException if a required dependency is null
      */
@@ -40,18 +40,18 @@ public class TaskController {
     /**
      * Creates an open task owned by the logged-in user.
      *
-     * @param title nonblank title, trimmed before storage
+     * @param title       nonblank title, trimmed before storage
      * @param description optional description; null becomes empty and whitespace is trimmed
-     * @param assignee persisted user, or null for unassigned
-     * @param dueDate due date, or null for none
-     * @param priority priority, or null for MEDIUM
+     * @param assignee    persisted user, or null for unassigned
+     * @param dueDate     due date, or null for none
+     * @param priority    priority, or null for MEDIUM
      * @return persisted task with its generated ID
-     * @throws IllegalStateException if no user is logged in
-     * @throws IllegalArgumentException if the title is blank or a user is not persisted
-     * @throws SQLException if database access fails
+     * @throws IllegalStateException    if no user is logged in
+     * @throws IllegalArgumentException if the title is blank or a user ID is not positive
+     * @throws SQLException             if database access fails, including a foreign-key violation
      */
-    public Task createTask(String title, String description, User assignee,
-            LocalDate dueDate, Priority priority) throws SQLException {
+    public Task createTask(String title, String description, User assignee, LocalDate dueDate, Priority priority)
+            throws SQLException {
         User currentUser = requireCurrentUser();
         Task task = new Task(title, description, currentUser, assignee, dueDate, priority);
         return taskDAO.createTask(task);
@@ -62,7 +62,7 @@ public class TaskController {
      *
      * @return tasks ordered open first, then by ID; possibly empty; self-assigned tasks occur once
      * @throws IllegalStateException if no user is logged in
-     * @throws SQLException if database access fails
+     * @throws SQLException          if database access fails
      */
     public List<Task> getRelevantTasks() throws SQLException {
         User currentUser = requireCurrentUser();
@@ -74,7 +74,7 @@ public class TaskController {
      *
      * @return tasks ordered open first, then by ID; possibly empty
      * @throws IllegalStateException if no user is logged in
-     * @throws SQLException if database access fails
+     * @throws SQLException          if database access fails
      */
     public List<Task> getCreatedTasks() throws SQLException {
         User currentUser = requireCurrentUser();
@@ -86,7 +86,7 @@ public class TaskController {
      *
      * @return tasks ordered open first, then by ID; possibly empty
      * @throws IllegalStateException if no user is logged in
-     * @throws SQLException if database access fails
+     * @throws SQLException          if database access fails
      */
     public List<Task> getAssignedTasks() throws SQLException {
         User currentUser = requireCurrentUser();
@@ -96,21 +96,21 @@ public class TaskController {
     /**
      * Updates details only when the logged-in user is the creator.
      *
-     * @param taskId positive ID of an existing task
-     * @param title nonblank title, trimmed before storage
+     * @param taskId      positive ID of an existing task
+     * @param title       nonblank title, trimmed before storage
      * @param description optional description; null becomes empty and whitespace is trimmed
-     * @param assignee persisted user, or null for unassigned
-     * @param dueDate due date, or null for none
-     * @param priority priority, or null for MEDIUM
+     * @param assignee    persisted user, or null for unassigned
+     * @param dueDate     due date, or null for none
+     * @param priority    priority, or null for MEDIUM
      * @return true if one stored task was changed; false if no row was changed
-     * @throws IllegalStateException if no user is logged in
-     * @throws IllegalArgumentException if the ID is invalid or the task is missing; also if
-     *         the title is blank or a user is not persisted
-     * @throws SecurityException if the current user lacks permission
-     * @throws SQLException if database access fails
+     * @throws IllegalStateException    if no user is logged in
+     * @throws IllegalArgumentException if the ID is invalid or the task is missing; also if the title is blank or a
+     *                                  user ID is not positive
+     * @throws SecurityException        if the current user lacks permission
+     * @throws SQLException             if database access fails, including a foreign-key violation
      */
-    public boolean updateTask(int taskId, String title, String description, User assignee,
-            LocalDate dueDate, Priority priority) throws SQLException {
+    public boolean updateTask(int taskId, String title, String description, User assignee, LocalDate dueDate,
+            Priority priority) throws SQLException {
         User currentUser = requireCurrentUser();
         Task task = requireTask(taskId);
         requireCreator(task, currentUser);
@@ -126,14 +126,14 @@ public class TaskController {
     /**
      * Assigns or unassigns a task only for its creator.
      *
-     * @param taskId positive ID of an existing task
+     * @param taskId   positive ID of an existing task
      * @param assignee persisted user, or null to unassign
      * @return true if one stored task was changed; false if no row was changed
-     * @throws IllegalStateException if no user is logged in
-     * @throws IllegalArgumentException if the ID is invalid or the task is missing; also if
-     *         the assignee is not persisted
-     * @throws SecurityException if the current user lacks permission
-     * @throws SQLException if database access fails
+     * @throws IllegalStateException    if no user is logged in
+     * @throws IllegalArgumentException if the ID is invalid or the task is missing; also if the supplied assignee ID is
+     *                                  not positive
+     * @throws SecurityException        if the current user lacks permission
+     * @throws SQLException             if database access fails, including a foreign-key violation
      */
     public boolean assignTask(int taskId, User assignee) throws SQLException {
         User currentUser = requireCurrentUser();
@@ -145,13 +145,13 @@ public class TaskController {
     /**
      * Completes or reopens a task for its creator or assignee.
      *
-     * @param taskId positive ID of an existing task
+     * @param taskId    positive ID of an existing task
      * @param completed true to complete; false to reopen
      * @return true if one stored task was changed; false if no row was changed
-     * @throws IllegalStateException if no user is logged in
+     * @throws IllegalStateException    if no user is logged in
      * @throws IllegalArgumentException if the ID is invalid or the task is missing
-     * @throws SecurityException if the current user lacks permission
-     * @throws SQLException if database access fails
+     * @throws SecurityException        if the current user lacks permission
+     * @throws SQLException             if database access fails
      */
     public boolean markCompleted(int taskId, boolean completed) throws SQLException {
         User currentUser = requireCurrentUser();
@@ -165,10 +165,10 @@ public class TaskController {
      *
      * @param taskId positive ID of an existing task
      * @return true if one stored task was changed; false if no row was changed
-     * @throws IllegalStateException if no user is logged in
+     * @throws IllegalStateException    if no user is logged in
      * @throws IllegalArgumentException if the ID is invalid or the task is missing
-     * @throws SecurityException if the current user lacks permission
-     * @throws SQLException if database access fails
+     * @throws SecurityException        if the current user lacks permission
+     * @throws SQLException             if database access fails
      */
     public boolean deleteTask(int taskId) throws SQLException {
         User currentUser = requireCurrentUser();
@@ -204,8 +204,7 @@ public class TaskController {
 
     private void requireCreatorOrAssignee(Task task, User currentUser) {
         boolean creator = task.getCreator().getUserId() == currentUser.getUserId();
-        boolean assignee = task.getAssignee() != null
-                && task.getAssignee().getUserId() == currentUser.getUserId();
+        boolean assignee = task.getAssignee() != null && task.getAssignee().getUserId() == currentUser.getUserId();
         if (!creator && !assignee) {
             throw new SecurityException("Only the task creator or assignee may perform this action");
         }

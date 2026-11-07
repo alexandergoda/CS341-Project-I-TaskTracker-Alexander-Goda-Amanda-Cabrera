@@ -41,8 +41,7 @@ public class TaskControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        DatabaseManager databaseManager =
-                new DatabaseManager(tempDir.resolve("task-controller-test.db").toString());
+        DatabaseManager databaseManager = new DatabaseManager(tempDir.resolve("task-controller-test.db").toString());
 
         databaseManager.initializeDatabase();
 
@@ -61,20 +60,11 @@ public class TaskControllerTest {
 
     @Test
     void creatorCanEditTask() throws Exception {
-        Task created = taskController.createTask(
-                "Original title",
-                "Original description",
-                null,
-                LocalDate.of(2026, 10, 20),
-                Priority.MEDIUM);
+        Task created = taskController.createTask("Original title", "Original description", null,
+                LocalDate.of(2026, 10, 20), Priority.MEDIUM);
 
-        assertTrue(taskController.updateTask(
-                created.getTaskId(),
-                "Updated title",
-                "Updated description",
-                amanda,
-                LocalDate.of(2026, 10, 21),
-                Priority.HIGH));
+        assertTrue(taskController.updateTask(created.getTaskId(), "Updated title", "Updated description", amanda,
+                LocalDate.of(2026, 10, 21), Priority.HIGH));
 
         Task updated = taskDAO.findById(created.getTaskId());
 
@@ -89,25 +79,13 @@ public class TaskControllerTest {
 
     @Test
     void nonCreatorCannotEditTask() throws Exception {
-        Task created = taskController.createTask(
-                "Alex task",
-                "Only Alex may edit",
-                amanda,
-                null,
-                Priority.MEDIUM);
+        Task created = taskController.createTask("Alex task", "Only Alex may edit", amanda, null, Priority.MEDIUM);
 
         authController.logout();
         assertTrue(authController.login("amanda", "test123"));
 
-        assertThrows(
-                SecurityException.class,
-                () -> taskController.updateTask(
-                        created.getTaskId(),
-                        "Unauthorized edit",
-                        "Should not save",
-                        amanda,
-                        null,
-                        Priority.LOW));
+        assertThrows(SecurityException.class, () -> taskController.updateTask(created.getTaskId(), "Unauthorized edit",
+                "Should not save", amanda, null, Priority.LOW));
 
         Task unchanged = taskDAO.findById(created.getTaskId());
 
@@ -117,12 +95,7 @@ public class TaskControllerTest {
 
     @Test
     void creatorCanDeleteTask() throws Exception {
-        Task created = taskController.createTask(
-                "Delete me",
-                "",
-                null,
-                null,
-                Priority.LOW);
+        Task created = taskController.createTask("Delete me", "", null, null, Priority.LOW);
 
         assertTrue(taskController.deleteTask(created.getTaskId()));
         assertNull(taskDAO.findById(created.getTaskId()));
@@ -130,31 +103,19 @@ public class TaskControllerTest {
 
     @Test
     void nonCreatorCannotDeleteTask() throws Exception {
-        Task created = taskController.createTask(
-                "Protected task",
-                "",
-                amanda,
-                null,
-                Priority.MEDIUM);
+        Task created = taskController.createTask("Protected task", "", amanda, null, Priority.MEDIUM);
 
         authController.logout();
         assertTrue(authController.login("amanda", "test123"));
 
-        assertThrows(
-                SecurityException.class,
-                () -> taskController.deleteTask(created.getTaskId()));
+        assertThrows(SecurityException.class, () -> taskController.deleteTask(created.getTaskId()));
 
         assertNotNull(taskDAO.findById(created.getTaskId()));
     }
 
     @Test
     void assigneeCanCompleteAssignedTask() throws Exception {
-        Task created = taskController.createTask(
-                "Shared task",
-                "",
-                amanda,
-                null,
-                Priority.HIGH);
+        Task created = taskController.createTask("Shared task", "", amanda, null, Priority.HIGH);
 
         authController.logout();
         assertTrue(authController.login("amanda", "test123"));
@@ -169,25 +130,19 @@ public class TaskControllerTest {
 
     @Test
     void unrelatedUserCannotCompleteTask() throws Exception {
-        Task created = taskController.createTask(
-                "Shared task",
-                "",
-                amanda,
-                null,
-                Priority.HIGH);
+        Task created = taskController.createTask("Shared task", "", amanda, null, Priority.HIGH);
 
         authController.logout();
         assertTrue(authController.login("charlie", "test123"));
 
-        assertThrows(
-                SecurityException.class,
-                () -> taskController.markCompleted(created.getTaskId(), true));
+        assertThrows(SecurityException.class, () -> taskController.markCompleted(created.getTaskId(), true));
 
         Task unchanged = taskDAO.findById(created.getTaskId());
 
         assertNotNull(unchanged);
         assertFalse(unchanged.isCompleted());
     }
+
     /** Verifies session boundaries for every public task operation. */
     @Test
     void loggedOutUserCannotReadOrChangeTasks() throws Exception {
@@ -197,16 +152,12 @@ public class TaskControllerTest {
         assertThrows(IllegalStateException.class, () -> taskController.getRelevantTasks());
         assertThrows(IllegalStateException.class, () -> taskController.getCreatedTasks());
         assertThrows(IllegalStateException.class, () -> taskController.getAssignedTasks());
-        assertThrows(IllegalStateException.class,
-                () -> taskController.createTask("Blocked", "", null, null, null));
+        assertThrows(IllegalStateException.class, () -> taskController.createTask("Blocked", "", null, null, null));
         assertThrows(IllegalStateException.class,
                 () -> taskController.updateTask(task.getTaskId(), "Blocked", "", null, null, null));
-        assertThrows(IllegalStateException.class,
-                () -> taskController.assignTask(task.getTaskId(), amanda));
-        assertThrows(IllegalStateException.class,
-                () -> taskController.markCompleted(task.getTaskId(), true));
-        assertThrows(IllegalStateException.class,
-                () -> taskController.deleteTask(task.getTaskId()));
+        assertThrows(IllegalStateException.class, () -> taskController.assignTask(task.getTaskId(), amanda));
+        assertThrows(IllegalStateException.class, () -> taskController.markCompleted(task.getTaskId(), true));
+        assertThrows(IllegalStateException.class, () -> taskController.deleteTask(task.getTaskId()));
         assertEquals("Session test", taskDAO.findById(task.getTaskId()).getTitle());
         assertFalse(taskDAO.findById(task.getTaskId()).isCompleted());
     }
@@ -234,8 +185,7 @@ public class TaskControllerTest {
     @Test
     void blankTitleCannotCreateOrOverwriteTask() throws Exception {
         Task task = taskController.createTask("Keep this title", "", null, null, Priority.LOW);
-        assertThrows(IllegalArgumentException.class,
-                () -> taskController.createTask("   ", "", null, null, null));
+        assertThrows(IllegalArgumentException.class, () -> taskController.createTask("   ", "", null, null, null));
         assertThrows(IllegalArgumentException.class,
                 () -> taskController.updateTask(task.getTaskId(), " ", "", amanda, null, null));
         assertEquals(1, taskController.getRelevantTasks().size());

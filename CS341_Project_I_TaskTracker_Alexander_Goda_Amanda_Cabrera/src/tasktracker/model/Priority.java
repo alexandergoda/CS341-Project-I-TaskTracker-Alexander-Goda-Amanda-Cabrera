@@ -7,7 +7,5 @@ package tasktracker.model;
  * @author Amanda Cabrera
  */
 public enum Priority {
-    LOW,
-    MEDIUM,
-    HIGH
+    LOW, MEDIUM, HIGH
 }
