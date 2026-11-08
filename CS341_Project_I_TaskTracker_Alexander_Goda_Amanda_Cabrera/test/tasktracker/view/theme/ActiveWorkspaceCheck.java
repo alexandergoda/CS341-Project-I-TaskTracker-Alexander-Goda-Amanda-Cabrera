@@ -3,13 +3,17 @@ package tasktracker.view.theme;
 import tasktracker.view.components.AppearanceControl;
 import tasktracker.view.screens.DashboardSurface;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.*;
 import tasktracker.controller.*;
 import tasktracker.data.*;
@@ -23,6 +27,8 @@ public final class ActiveWorkspaceCheck {
     private static DashboardSurface dashboard;
     private static CachedSceneTransition scene;
     private static final AtomicBoolean removedCallback = new AtomicBoolean();
+    private static final AtomicInteger scenePreparations = new AtomicInteger();
+    private static final Color RECOVERED_SCENE = new Color(51, 74, 99);
 
     private static Object field(Object target, String name) throws Exception {
         Field field = target.getClass().getDeclaredField(name);
@@ -76,7 +82,17 @@ public final class ActiveWorkspaceCheck {
 
                 scene = new CachedSceneTransition(() -> {
                 }, (renderer, request) -> {
-                    throw new IllegalStateException("Intentional failure injection");
+                    if (scenePreparations.incrementAndGet() == 1)
+                        throw new IllegalStateException("Intentional transient failure injection");
+                    BufferedImage background = new BufferedImage(request.width, request.height,
+                            BufferedImage.TYPE_INT_RGB);
+                    Graphics2D g = background.createGraphics();
+                    g.setColor(RECOVERED_SCENE);
+                    g.fillRect(0, 0, request.width, request.height);
+                    g.dispose();
+                    return new CachedSceneTransition.Frame(background,
+                            new BufferedImage(request.width, request.height, BufferedImage.TYPE_INT_ARGB_PRE),
+                            request.weights);
                 });
                 scene.request(320, 240, new Rectangle[0], new double[] { 1, 0, 0, 0, 0, 0 });
             } catch (Exception error) {
@@ -88,6 +104,9 @@ public final class ActiveWorkspaceCheck {
         SwingUtilities.invokeAndWait(() -> {
             check(!removedCallback.get(), "Removed screen fired completion callback");
             check(scene.isReady(320, 240), "Failed initial scene left entrance waiting");
+            check(scenePreparations.get() == 1, "Scene failure fixture did not prepare exactly once");
+            scene.request(320, 240, new Rectangle[0], new double[] { 1, 0, 0, 0, 0, 0 });
+            check(!scene.isReady(320, 240), "Identical request did not retry failed scene preparation");
             check(dashboard.model.getRowCount() == 1, "Completed task was not hidden");
             check(dashboard.completedToggle.isVisible(), "Completed filter unavailable");
             dashboard.completedToggle.doClick();
@@ -97,8 +116,19 @@ public final class ActiveWorkspaceCheck {
             dashboard.complete.doClick();
         });
         Thread.sleep(800);
+        awaitSceneRecovery();
         SwingUtilities.invokeAndWait(() -> {
             try {
+                check(scenePreparations.get() == 2, "Identical scene retry did not run exactly once");
+                BufferedImage image = new BufferedImage(320, 240, BufferedImage.TYPE_INT_RGB);
+                Graphics2D g = image.createGraphics();
+                scene.background(g, 320, 240);
+                g.dispose();
+                check(image.getRGB(0, 0) == RECOVERED_SCENE.getRGB(),
+                        "Retry retained the fallback instead of the prepared frame");
+                scene.request(320, 240, new Rectangle[0], new double[] { 1, 0, 0, 0, 0, 0 });
+                check(scene.isReady(320, 240) && scenePreparations.get() == 2,
+                        "Successful identical scene request was not reused");
                 check(!new TaskDAO(db).findById(earlier.getTaskId()).isCompleted(), "Mark open did not persist");
                 check(dashboard.model.getValueAt(0, 1).equals("Earlier"), "Reopened task did not return to date order");
                 scene.dispose();
@@ -116,10 +146,29 @@ public final class ActiveWorkspaceCheck {
             for (String choice : new String[] { "Keep", "Discard", "Save" })
                 checkDeselectionWithDraft(editing, choice);
         System.out.println("PASS: active workspace ordering, completion, filter, reopening, theme restoration, "
-                + "removal cleanup, scene failure fallback, correct completion identity after saving new/edit drafts, "
+                + "removal cleanup, scene failure fallback and identical-request recovery, "
+                + "correct completion identity after saving new/edit drafts, "
                 + "empty-account/hidden-completed guidance, and guarded deselection/reselection with new/edit "
                 + "Keep/Discard/Save and invalid-save corrected retry.");
         System.exit(0);
+    }
+
+    private static void awaitSceneRecovery() throws Exception {
+        long deadline = System.nanoTime() + 5_000_000_000L;
+        while (System.nanoTime() < deadline) {
+            boolean[] ready = { false };
+            SwingUtilities.invokeAndWait(() -> {
+                try {
+                    ready[0] = scene.isReady(320, 240) && field(scene, "animation") == null;
+                } catch (Exception error) {
+                    throw new RuntimeException(error);
+                }
+            });
+            if (ready[0])
+                return;
+            Thread.sleep(20);
+        }
+        throw new AssertionError("Retried scene did not finish preparing and fading");
     }
 
     /** Deselection must update the same logical task and action state as selection. */

@@ -76,24 +76,24 @@ The renderer generates matching foreground lighting from the master foreground. 
 
 ## Testing
 
-Run the `tester` package under the `test` source folder as **JUnit Test**. The inventory is **33 JUnit test methods across six classes**:
+Run the `tester` package under the `test` source folder as **JUnit Test**. The inventory is **35 JUnit test methods across six classes**:
 
 | Class | Test methods |
 | --- | ---: |
-| `DatabaseManagerTest` | 2 |
+| `DatabaseManagerTest` | 4 |
 | `UserDAOTest` | 5 |
 | `TaskDAOTest` | 6 |
 | `AuthControllerTest` | 6 |
 | `TaskControllerTest` | 9 |
 | `PasswordChangeTest` | 5 |
 
-The suite covers initialization, application foreign-key enforcement, accounts/session rules, password changes, task CRUD, permissions, assignment, optional dates/priority, completion and reopening. It uses isolated temporary SQLite databases, so DAO/controller checks include real database integration.
+The suite covers initialization, application foreign-key enforcement, failed-connection cleanup, accounts/session rules, password changes, task CRUD, permissions, assignment, optional dates/priority, completion and reopening. It uses isolated temporary SQLite databases, so DAO/controller checks include real database integration.
 
 The `test/tasktracker` packages also contain **25 separate standalone check programs**, each with a `main` method. Run each as a Java Application with **VM argument** `-Djava.awt.headless=true` and the project's normal build path. The testing report lists every fully qualified check class. These cover component interactions, task presentation, unsaved-draft decisions, resource loading, rendering, transitions and callback cleanup. Count their results separately from JUnit.
 
-Verification on **November 7, 2026** passed **33/33 JUnit tests** and **25/25 standalone programs**. The imported Eclipse project had **0 errors and 0 warnings**. Independent Java 11 compilation with `--release 11 -encoding UTF-8 -Xlint:all` and production JavaDoc with `-Xdoclint:all` also reported **0 errors and 0 warnings**.
+The current Java 11 verification on **November 7, 2026** passed **35/35 JUnit tests** and **25/25 standalone programs**. Compilation with `--release 11 -encoding UTF-8 -Xlint:all` and production JavaDoc with `-Xdoclint:all` reported **0 errors and 0 warnings**. The earlier imported Eclipse build also had **0 errors and 0 warnings**.
 
-We completed a manual walkthrough on macOS on November 7 and found no issues. The [testing report](docs/CS341_Project_I_Testing_Report_Alexander_Goda_Amanda_Cabrera.docx) documents the test procedures, results and coverage.
+We completed a manual walkthrough on macOS on November 7 and found no issues. That walkthrough preceded the current regression corrections. The [testing report](docs/CS341_Project_I_Testing_Report_Alexander_Goda_Amanda_Cabrera.docx) documents the test procedures, results and coverage.
 
 ## JavaDoc API reference
 

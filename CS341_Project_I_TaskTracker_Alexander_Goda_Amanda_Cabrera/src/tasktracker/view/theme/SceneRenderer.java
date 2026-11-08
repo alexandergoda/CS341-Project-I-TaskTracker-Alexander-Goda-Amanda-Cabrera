@@ -109,18 +109,26 @@ public final class SceneRenderer {
      * @param h destination height in pixels
      */
     public void lastLightForeground(Graphics2D g, int w, int h) {
-        if (lastLightForegrounds[0] == null) {
-            if (lastLightMasterForeground == null)
-                lastLightMasterForeground = LastLightGrade.apply(read(LastLightScene.DUSK.asset("foreground")), true);
-            for (LastLightScene scene : LastLightScene.values())
-                lastLightForegrounds[scene.ordinal()] = ForegroundLighting.apply(lastLightMasterForeground, scene);
-        }
+        prepareForegrounds();
         BufferedImage lastLightForeground = blendedForeground();
         int plateHeight = (int) Math
                 .round(w * (double) lastLightForeground.getHeight() / lastLightForeground.getWidth());
         // Keep the authored unequal crops. Extra cropping erased the smaller left bloom.
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         g.drawImage(lastLightForeground, 0, h - plateHeight, w, plateHeight, null);
+    }
+
+    private static synchronized void prepareForegrounds() {
+        if (lastLightForegrounds[0] != null)
+            return;
+        BufferedImage master = LastLightGrade.apply(read(LastLightScene.DUSK.asset("foreground")), true);
+        BufferedImage[] prepared = new BufferedImage[SCENE_COUNT];
+        for (LastLightScene scene : LastLightScene.values())
+            prepared[scene.ordinal()] = ForegroundLighting.apply(master, scene);
+        // Publish only after every scene is ready. The shared lock also keeps
+        // another renderer from reading the cache during initialization.
+        lastLightMasterForeground = master;
+        System.arraycopy(prepared, 0, lastLightForegrounds, 0, SCENE_COUNT);
     }
 
     private BufferedImage foregroundBlend;

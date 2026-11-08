@@ -21,6 +21,8 @@ public final class CalendarPanel extends JPanel {
     private final JPanel days = new JPanel(new GridLayout(0, 7, 3, 3));
     private final JLabel heading = new JLabel("", SwingConstants.CENTER);
     private final Color ink = ThemePalette.text(SceneTheme.usesDarkGlass());
+    private final JButton previousMonth;
+    private final JButton nextMonth;
 
     public CalendarPanel(LocalDate selected, Consumer<LocalDate> choose, Runnable close) {
         super(new BorderLayout(0, 12));
@@ -34,16 +36,17 @@ public final class CalendarPanel extends JPanel {
         setPreferredSize(new Dimension(330, 350));
         JPanel header = new JPanel(new BorderLayout(8, 0));
         header.setOpaque(false);
-        JButton prev = button("‹"), next = button("›");
-        prev.getAccessibleContext().setAccessibleName("Previous month");
-        next.getAccessibleContext().setAccessibleName("Next month");
-        prev.addActionListener(e -> changeMonth(-1));
-        next.addActionListener(e -> changeMonth(1));
+        previousMonth = button("‹");
+        nextMonth = button("›");
+        previousMonth.getAccessibleContext().setAccessibleName("Previous month");
+        nextMonth.getAccessibleContext().setAccessibleName("Next month");
+        previousMonth.addActionListener(e -> changeMonth(-1));
+        nextMonth.addActionListener(e -> changeMonth(1));
         heading.setForeground(ink);
         heading.setFont(new Font("SansSerif", Font.BOLD, 16));
-        header.add(prev, BorderLayout.WEST);
+        header.add(previousMonth, BorderLayout.WEST);
         header.add(heading);
-        header.add(next, BorderLayout.EAST);
+        header.add(nextMonth, BorderLayout.EAST);
         add(header, BorderLayout.NORTH);
         days.setOpaque(false);
         add(days, BorderLayout.CENTER);
@@ -67,12 +70,18 @@ public final class CalendarPanel extends JPanel {
     }
 
     public void changeMonth(int delta) {
-        month = month.plusMonths(delta);
+        try {
+            month = month.plusMonths(delta);
+        } catch (DateTimeException limit) {
+            return;
+        }
         render();
     }
 
     private void render() {
         heading.setText(month.format(DateTimeFormatter.ofPattern("MMMM uuuu", Locale.ENGLISH)));
+        previousMonth.setEnabled(!month.equals(YearMonth.from(LocalDate.MIN)));
+        nextMonth.setEnabled(!month.equals(YearMonth.from(LocalDate.MAX)));
         days.removeAll();
         for (String day : new String[] { "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su" }) {
             JLabel label = new JLabel(day, SwingConstants.CENTER);
@@ -81,9 +90,15 @@ public final class CalendarPanel extends JPanel {
             days.add(label);
         }
         int offset = month.atDay(1).getDayOfWeek().getValue() - 1;
-        LocalDate start = month.atDay(1).minusDays(offset);
+        long start = month.atDay(1).toEpochDay() - offset;
         for (int i = 0; i < 42; i++) {
-            final LocalDate date = start.plusDays(i);
+            long epochDay = start + i;
+            // A boundary month's grid can extend beyond LocalDate's supported range.
+            if (epochDay < LocalDate.MIN.toEpochDay() || epochDay > LocalDate.MAX.toEpochDay()) {
+                days.add(new JLabel(""));
+                continue;
+            }
+            final LocalDate date = LocalDate.ofEpochDay(epochDay);
             final boolean picked = date.equals(selected), today = date.equals(LocalDate.now());
             JButton day = new JButton(String.valueOf(date.getDayOfMonth())) {
                 private static final long serialVersionUID = 1L;

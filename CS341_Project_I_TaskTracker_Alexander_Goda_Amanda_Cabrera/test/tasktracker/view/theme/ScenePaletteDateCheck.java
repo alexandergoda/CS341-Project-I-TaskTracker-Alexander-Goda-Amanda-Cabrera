@@ -1,6 +1,7 @@
 package tasktracker.view.theme;
 
 import tasktracker.view.components.DatePickerField;
+import tasktracker.view.components.CalendarPanel;
 import tasktracker.view.components.SceneFields;
 import tasktracker.view.presentation.DisplayDates;
 import tasktracker.view.screens.DashboardSurface;
@@ -11,7 +12,10 @@ import java.awt.image.BufferedImage;
 import java.lang.reflect.*;
 import java.nio.file.Files;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
+import java.util.HashSet;
+import java.util.Set;
 import javax.swing.*;
 import tasktracker.controller.*;
 import tasktracker.data.*;
@@ -36,6 +40,7 @@ public final class ScenePaletteDateCheck {
         }
         if (DisplayDates.parse(" ") != null)
             throw new AssertionError("Optional date");
+        SwingUtilities.invokeAndWait(ScenePaletteDateCheck::checkCalendarBoundaries);
         double primaryMin = 100, fieldMin = 100, glassMin = 100;
         SceneRenderer renderer = new SceneRenderer();
         Rectangle card = new Rectangle(25, 100, 650, 350);
@@ -116,6 +121,16 @@ public final class ScenePaletteDateCheck {
                 date.doClick(0);
                 if (!field.getText().equals("11/03/2026") || f.get(picker) != null)
                     throw new AssertionError("Calendar format/close");
+                for (LocalDate boundary : new LocalDate[] { LocalDate.MIN, LocalDate.MAX }) {
+                    field.setText(DisplayDates.format(boundary));
+                    ((JButton) picker.getComponent(1)).doClick(0);
+                    JButton boundaryDate = find((JPanel) f.get(picker), boundary.toString());
+                    if (boundaryDate == null)
+                        throw new AssertionError("Calendar missing boundary date");
+                    boundaryDate.doClick(0);
+                    if (!field.getText().equals(DisplayDates.format(boundary)) || f.get(picker) != null)
+                        throw new AssertionError("Boundary date format/close");
+                }
                 ((JButton) picker.getComponent(1)).doClick(0);
                 picker.removeNotify();
                 if (f.get(picker) != null)
@@ -125,8 +140,76 @@ public final class ScenePaletteDateCheck {
             }
         });
         System.out.println(
-                "PASS: strict US dates, actual workspace create/edit/validation, calendar selection and animation cleanup.");
+                "PASS: strict US dates, representable calendar boundaries and month navigation, actual workspace create/edit/validation, calendar selection and animation cleanup.");
         System.exit(0);
+    }
+
+    private static void checkCalendarBoundaries() {
+        LocalDate[] chosen = { null };
+        CalendarPanel upper = new CalendarPanel(DisplayDates.parse("12/15/+999999999"),
+                date -> chosen[0] = date, () -> { });
+        checkCalendarGrid(upper, YearMonth.from(LocalDate.MAX));
+        checkNavigation(upper, true, false);
+        upper.changeMonth(1);
+        upper.changeMonth(Integer.MAX_VALUE);
+        checkCalendarGrid(upper, YearMonth.from(LocalDate.MAX));
+        upper.changeMonth(-1);
+        checkCalendarGrid(upper, YearMonth.of(999999999, 11));
+        checkNavigation(upper, true, true);
+        upper.changeMonth(1);
+        find(upper, LocalDate.MAX.toString()).doClick(0);
+        if (!LocalDate.MAX.equals(chosen[0]))
+            throw new AssertionError("Maximum date selection");
+
+        CalendarPanel lower = new CalendarPanel(LocalDate.MIN, date -> chosen[0] = date, () -> { });
+        checkCalendarGrid(lower, YearMonth.from(LocalDate.MIN));
+        checkNavigation(lower, false, true);
+        lower.changeMonth(-1);
+        lower.changeMonth(Integer.MIN_VALUE);
+        checkCalendarGrid(lower, YearMonth.from(LocalDate.MIN));
+        lower.changeMonth(1);
+        checkCalendarGrid(lower, YearMonth.of(-999999999, 2));
+        checkNavigation(lower, true, true);
+        lower.changeMonth(-1);
+        find(lower, LocalDate.MIN.toString()).doClick(0);
+        if (!LocalDate.MIN.equals(chosen[0]))
+            throw new AssertionError("Minimum date selection");
+
+        CalendarPanel ordinary = new CalendarPanel(LocalDate.of(2028, 2, 29), date -> { }, () -> { });
+        checkCalendarGrid(ordinary, YearMonth.of(2028, 2));
+        checkNavigation(ordinary, true, true);
+        ordinary.changeMonth(-1);
+        checkCalendarGrid(ordinary, YearMonth.of(2028, 1));
+        ordinary.changeMonth(-1);
+        checkCalendarGrid(ordinary, YearMonth.of(2027, 12));
+        ordinary.changeMonth(2);
+        checkCalendarGrid(ordinary, YearMonth.of(2028, 2));
+    }
+
+    private static void checkNavigation(CalendarPanel calendar, boolean previous, boolean next) {
+        if (find(calendar, "Previous month").isEnabled() != previous
+                || find(calendar, "Next month").isEnabled() != next)
+            throw new AssertionError("Calendar navigation availability");
+    }
+
+    private static void checkCalendarGrid(CalendarPanel calendar, YearMonth month) {
+        JPanel grid = (JPanel) ((BorderLayout) calendar.getLayout()).getLayoutComponent(BorderLayout.CENTER);
+        if (grid.getComponentCount() != 49)
+            throw new AssertionError("Calendar grid size");
+        Set<LocalDate> visible = new HashSet<>();
+        for (int i = 7; i < 49; i++) {
+            Component cell = grid.getComponent(i);
+            if (cell instanceof JButton) {
+                LocalDate date = LocalDate.parse(cell.getAccessibleContext().getAccessibleName());
+                if (!visible.add(date) || date.getDayOfWeek().getValue() - 1 != (i - 7) % 7)
+                    throw new AssertionError("Calendar date identity or weekday alignment");
+            } else if (!(cell instanceof JLabel) || !((JLabel) cell).getText().isEmpty()) {
+                throw new AssertionError("Unsupported calendar date must be an empty cell");
+            }
+        }
+        for (int day = 1; day <= month.lengthOfMonth(); day++)
+            if (!visible.contains(month.atDay(day)))
+                throw new AssertionError("Missing calendar date " + month.atDay(day));
     }
 
     private static void layout(Container c) {

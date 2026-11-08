@@ -70,6 +70,15 @@ public class DatabaseManager {
         Connection connection = DriverManager.getConnection("jdbc:sqlite:" + databaseFile);
         try (Statement statement = connection.createStatement()) {
             statement.execute("PRAGMA foreign_keys = ON");
+        } catch (SQLException failure) {
+            try {
+                connection.close();
+            } catch (SQLException closeFailure) {
+                if (closeFailure != failure) {
+                    failure.addSuppressed(closeFailure);
+                }
+            }
+            throw failure;
         }
         return connection;
     }

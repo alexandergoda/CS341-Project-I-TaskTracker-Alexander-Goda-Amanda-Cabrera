@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,12 +68,15 @@ public class TaskDAOTest {
 
     @Test
     void relevantTasksIncludeCreatedAndAssignedTasksButNotUnrelatedTasks() throws Exception {
-        taskDAO.createTask(new Task("Created by Alex", "", alex, null, null, Priority.MEDIUM));
-        taskDAO.createTask(new Task("Assigned to Alex", "", amanda, alex, null, Priority.LOW));
-        taskDAO.createTask(new Task("Unrelated", "", amanda, thirdUser, null, Priority.HIGH));
+        Task created = taskDAO.createTask(new Task("Created by Alex", "", alex, null, null, Priority.MEDIUM));
+        Task assigned = taskDAO.createTask(new Task("Assigned to Alex", "", amanda, alex, null, Priority.LOW));
+        Task unrelated = taskDAO.createTask(new Task("Unrelated", "", amanda, thirdUser, null, Priority.HIGH));
 
         List<Task> relevant = taskDAO.findRelevantTasks(alex.getUserId());
         assertEquals(2, relevant.size());
+        Set<Integer> taskIds = relevant.stream().map(Task::getTaskId).collect(Collectors.toSet());
+        assertEquals(Set.of(created.getTaskId(), assigned.getTaskId()), taskIds);
+        assertFalse(taskIds.contains(unrelated.getTaskId()));
     }
 
     @Test

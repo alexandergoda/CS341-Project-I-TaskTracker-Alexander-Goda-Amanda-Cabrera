@@ -4,7 +4,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import javax.swing.*;
 
-/** Horizontal, reversible workspace transition inside a stationary glass card. */
+/** Vertical, reversible workspace transition inside a stationary glass card. */
 public final class CardTransitionHost extends JPanel {
     private static final long serialVersionUID = 1L;
     private JComponent current;

@@ -104,6 +104,7 @@ public final class AppearanceControl extends JPanel {
             manual.sceneIcon = null;
             manual.animateTo(manual.isSelected());
             changed.accept(manual.isSelected() ? "Dark" : "Light");
+            refreshSceneSelection();
             updateManualCursor();
         });
         auto.addActionListener(e -> {
@@ -115,6 +116,7 @@ public final class AppearanceControl extends JPanel {
                 manual.setSelected(chosenScene == LastLightScene.NIGHT);
             if (!auto.isSelected())
                 manual.animateTo(manual.isSelected());
+            refreshSceneSelection();
             updateManualCursor();
             repaint();
         });
@@ -124,8 +126,6 @@ public final class AppearanceControl extends JPanel {
     private void buildSceneMenu() {
         sceneMenu.removeAll();
         for (LastLightScene scene : LastLightScene.values()) {
-            boolean selected = !auto.isSelected() && (chosenScene == scene || chosenScene == null
-                    && (manual.isSelected() ? scene == LastLightScene.NIGHT : scene == LastLightScene.MIDDAY));
             JButton item = new JButton(scene.label) {
                 private static final long serialVersionUID = 1L;
 
@@ -135,7 +135,7 @@ public final class AppearanceControl extends JPanel {
                     g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g.setColor(new Color(32, 34, 44));
                     g.fillRect(0, 0, getWidth(), getHeight());
-                    if (getModel().isRollover() || hasFocus() || selected) {
+                    if (getModel().isRollover() || hasFocus() || isSelected()) {
                         g.setColor(new Color(255, 205, 170, getModel().isRollover() || hasFocus() ? 40 : 23));
                         g.fillRoundRect(0, 1, getWidth(), getHeight() - 2, 12, 12);
                     }
@@ -143,7 +143,7 @@ public final class AppearanceControl extends JPanel {
                     g.setColor(ThemePalette.INK);
                     g.setFont(new Font("SansSerif", Font.PLAIN, 14));
                     g.drawString(scene.label, 48, 28);
-                    if (selected) {
+                    if (isSelected()) {
                         g.setColor(AdaptiveScenePalette.accent());
                         g.fillOval(getWidth() - 24, 19, 6, 6);
                     }
@@ -152,10 +152,23 @@ public final class AppearanceControl extends JPanel {
             };
             configure(item);
             item.setPreferredSize(new Dimension(220, 44));
-            item.getAccessibleContext().setAccessibleName(scene.label + (selected ? ", selected" : ""));
             item.addActionListener(e -> selectScene(scene));
             sceneMenu.add(item);
         }
+        refreshSceneSelection();
+    }
+
+    private void refreshSceneSelection() {
+        LastLightScene[] scenes = LastLightScene.values();
+        for (int i = 0; i < sceneMenu.getComponentCount(); i++) {
+            LastLightScene scene = scenes[i];
+            boolean selected = !auto.isSelected() && (chosenScene == scene || chosenScene == null
+                    && (manual.isSelected() ? scene == LastLightScene.NIGHT : scene == LastLightScene.MIDDAY));
+            JButton item = (JButton) sceneMenu.getComponent(i);
+            item.setSelected(selected);
+            item.getAccessibleContext().setAccessibleName(scene.label + (selected ? ", selected" : ""));
+        }
+        sceneMenu.repaint();
     }
 
     void selectScene(LastLightScene scene) {
@@ -169,6 +182,7 @@ public final class AppearanceControl extends JPanel {
         if (popover != null)
             popover.close();
         changed.accept("Scene");
+        refreshSceneSelection();
         updateManualCursor();
         repaint();
     }

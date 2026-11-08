@@ -107,6 +107,8 @@ public final class CachedSceneTransition {
                     // the screen transition waits forever for readiness.
                     System.err.println("Scene preparation failed: " + error.getMessage());
                     current = fallback(request);
+                    // Allow a later identical request to retry the failed preparation.
+                    pending = null;
                     SceneRenderState.weights = current.weights.clone();
                     repaint.run();
                 }
